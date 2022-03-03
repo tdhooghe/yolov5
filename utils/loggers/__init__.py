@@ -78,7 +78,7 @@ class Loggers():
         # Callback runs on pre-train routine end
         paths = self.save_dir.glob('*labels*.jpg')  # training labels
         if self.wandb:
-            self.wandb.log({"Labels": [wandb.Image(str(x), caption=x.name) for x in paths]})
+            self.wandb.log({"labels": [wandb.Image(str(x), caption=x.name) for x in paths]})
 
     def on_train_batch_end(self, ni, model, imgs, targets, paths, plots, sync_bn):
         # Callback runs on train batch end

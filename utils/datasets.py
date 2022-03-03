@@ -394,6 +394,7 @@ class LoadImagesAndLabels(Dataset):
 
         try:
             f = []  # image files
+            print(f'path {path}')
             for p in path if isinstance(path, list) else [path]:
                 p = Path(p)  # os-agnostic
                 if p.is_dir():  # dir
@@ -675,7 +676,7 @@ class LoadImagesAndLabels(Dataset):
             padw = x1a - x1b
             padh = y1a - y1b
 
-            # Labels
+            # labels
             labels, segments = self.labels[index].copy(), self.segments[index].copy()
             if labels.size:
                 labels[:, 1:] = xywhn2xyxy(labels[:, 1:], w, h, padw, padh)  # normalized xywh to pixel xyxy format
@@ -737,7 +738,7 @@ class LoadImagesAndLabels(Dataset):
             padx, pady = c[:2]
             x1, y1, x2, y2 = (max(x, 0) for x in c)  # allocate coords
 
-            # Labels
+            # labels
             labels, segments = self.labels[index].copy(), self.segments[index].copy()
             if labels.size:
                 labels[:, 1:] = xywhn2xyxy(labels[:, 1:], w, h, padx, pady)  # normalized xywh to pixel xyxy format
