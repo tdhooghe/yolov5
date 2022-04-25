@@ -92,6 +92,7 @@ def run(
     model = DetectMultiBackend(weights, device=device, dnn=dnn, data=data, fp16=half)
     stride, names, pt = model.stride, model.names, model.pt
     imgsz = check_img_size(imgsz, s=stride)  # check image size
+    print(f'check image size {imgsz}')
 
     # Dataloader
     if webcam:
@@ -207,6 +208,7 @@ def run(
     if update:
         strip_optimizer(weights)  # update model (to fix SourceChangeWarning)
     return list(t)
+
 
 def parse_opt():
     parser = argparse.ArgumentParser()

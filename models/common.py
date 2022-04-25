@@ -339,7 +339,9 @@ class DetectMultiBackend(nn.Module):
             if not Path(w).is_file():  # if not *.xml
                 w = next(Path(w).glob('*.xml'))  # get *.xml file from *_openvino_model dir
             network = core.read_network(model=w, weights=Path(w).with_suffix('.bin'))  # *.xml, *.bin paths
-            executable_network = core.load_network(network, device_name='CPU', num_requests=1)
+            # input_blob_name = next(iter(network.input_info))  # Get names of the input blob
+            # network.input_info[input_blob_name].precision = 'FP16'
+            executable_network = core.load_network(network, device_name='GPU', num_requests=1)
         elif engine:  # TensorRT
             LOGGER.info(f'Loading {w} for TensorRT inference...')
             import tensorrt as trt  # https://developer.nvidia.com/nvidia-tensorrt-download
@@ -422,7 +424,7 @@ class DetectMultiBackend(nn.Module):
             im = im.cpu().numpy()  # torch to numpy
             y = self.session.run([self.session.get_outputs()[0].name], {self.session.get_inputs()[0].name: im})[0]
         elif self.xml:  # OpenVINO
-            im = im.cpu().numpy()  # FP32
+            im = im.cpu().numpy()  #.astype("float16")  # for FP16
             desc = self.ie.TensorDesc(precision='FP32', dims=im.shape, layout='NCHW')  # Tensor Description
             request = self.executable_network.requests[0]  # inference request
             request.set_blob(blob_name='images', blob=self.ie.Blob(desc, im))  # name=next(iter(request.input_blobs))
