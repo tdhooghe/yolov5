@@ -4,17 +4,18 @@ from detect import run
 from datetime import datetime
 import pandas as pd
 
-
+# %%
 # python export.py --weights yolov5n.pt yolov5s.pt yolov5m.pt yolov5l.pt yolov5n6.pt yolov5s6.pt yolov5m6.pt yolov5l6.pt --include openvino
 MODEL = ["yolov5n_openvino_model/yolov5n.xml"]
 MODELS_OPENVINO = ["yolov5n_openvino_model/yolov5n.xml",
-                   "yolov5s_openvino_model/yolov5s.xml",
-                   "yolov5m_openvino_model/yolov5m.xml",
-                   "yolov5l_openvino_model/yolov5l.xml",
+                   # "yolov5s_openvino_model/yolov5s.xml",
+                   # "yolov5m_openvino_model/yolov5m.xml",
+                   # "yolov5l_openvino_model/yolov5l.xml",
                    "yolov5n6_openvino_model/yolov5n6.xml",
-                   "yolov5s6_openvino_model/yolov5s6.xml",
-                   "yolov5m6_openvino_model/yolov5m6.xml",
-                   "yolov5l6_openvino_model/yolov5l6.xml"]
+                   # "yolov5s6_openvino_model/yolov5s6.xml",
+                   # "yolov5m6_openvino_model/yolov5m6.xml",
+                   # "yolov5l6_openvino_model/yolov5l6.xml"
+                   ]
 MODELS = ["yolov5s.pt", "yolov5m.pt", "yolov5l.pt", "yolov5n6.pt", "yolov5s6.pt",
           "yolov5m6.pt", "yolov5l6.pt"]
 
@@ -39,7 +40,7 @@ def run_experiment2():
         print(row)
         temp = run(
             weights=model,
-            source="C:/Users/104JVE/PycharmProjects/datasets/coco/images/exp2/",
+            source="../datasets/coco/images/exp2/",
             # half=FP16bool,
             imgsz=(imgsize, imgsize),
             nosave=True,
@@ -52,12 +53,21 @@ def run_experiment2():
         row.append((datetime.now() - start_experiment).seconds)  # duration of experiment
         exp2_df_results.loc[counter] = row
         counter += 1
-    print(exp2_df_results)
+
     # store results
     filename = f'exp2_results/exp2_df_results_{datetime.now().strftime("%d-%m-%Y_%H-%M")}'
+    exp2_df_results.round(3)
+    print(exp2_df_results)
     exp2_df_results.to_pickle(filename + '.pkl')
     exp2_df_results.to_csv(filename + '.csv')
 
 
 if __name__ == "__main__":
     run_experiment2()
+
+# %%
+temp = pd.read_pickle('exp2_results/exp2_df_results_25-04-2022_19-36.pkl')
+print(temp['prep_time'].iloc[1])
+temp = temp.round(3)
+print(temp['prep_time'].iloc[1])
+temp.to_csv('exp2_results/exp2_df_results_25-04-2022_19-36.csv')
