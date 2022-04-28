@@ -172,22 +172,16 @@ def export_onnx(model, im, file, opset, train, dynamic, simplify, prefix=colorst
         LOGGER.info(f'{prefix} export failure: {e}')
 
 
-def export_openvino(model, im, file, precision, prefix=colorstr('OpenVINO:')):
+def export_openvino(model, im, file, half, prefix=colorstr('OpenVINO:')):
     # YOLOv5 OpenVINO export
     try:
         check_requirements(('openvino-dev',))  # requires openvino-dev: https://pypi.org/project/openvino-dev/
         import openvino.inference_engine as ie
 
         LOGGER.info(f'\n{prefix} starting export with openvino {ie.__version__}...')
-        input_model = Path(f'onnx_models/{file.stem}_{im.shape[-1]}').with_suffix('.onnx')
-        f = Path('openvino_models/' + str(file).replace('.pt', f'_{precision}_{im.shape[-1]}' + os.sep))
-        if precision == 'fp16':
-            cmd = f"mo --input_model {input_model} --output_dir {f} --data_type FP16"
-        elif precision == 'fp32':
-            cmd = f"mo --input_model {input_model} --output_dir {f} --data_type FP32"
-        else:
-            print(x)
-            print(f'Type {precision} is not a valid type')
+        f = str(file).replace('.pt', '_openvino_model' + os.sep)
+
+        cmd = f"mo --input_model {file.with_suffix('.onnx')} --output_dir {f} --data_type {'FP16' if half else 'FP32'}"
         subprocess.check_output(cmd, shell=True)
 
         LOGGER.info(f'{prefix} export success, saved as {f} ({file_size(f):.1f} MB)')
@@ -239,7 +233,7 @@ def export_engine(model, im, file, train, half, simplify, workspace=4, verbose=F
             model.model[-1].anchor_grid = grid
         else:  # TensorRT >= 8
             check_version(trt.__version__, '8.0.0', hard=True)  # require tensorrt>=8.0.0
-            export_onnx(model, im, file, 12, train, False, simplify)  # opset 13
+            export_onnx(model, im, file, 13, train, False, simplify)  # opset 13
         onnx = file.with_suffix('.onnx')
 
         LOGGER.info(f'\n{prefix} starting export with TensorRT {trt.__version__}...')
@@ -460,7 +454,6 @@ def run(
         device='cpu',  # cuda device, i.e. 0 or 0,1,2,3 or cpu
         include=('torchscript', 'onnx'),  # include formats
         half=False,  # FP16 half-precision export
-        ov_precision=False, #FP16 OpenVino Export
         inplace=False,  # set YOLOv5 Detect() inplace=True
         train=False,  # model.train() mode
         optimize=False,  # TorchScript: optimize for mobile
@@ -488,7 +481,7 @@ def run(
     # Load PyTorch model
     device = select_device(device)
     if half:
-        assert device.type != 'cpu' or coreml, '--half only compatible with GPU export, i.e. use --device 0'
+        assert device.type != 'cpu' or coreml or xml, '--half only compatible with GPU export, i.e. use --device 0'
     model = attempt_load(weights, map_location=device, inplace=True, fuse=True)  # load FP32 model
     nc, names = model.nc, model.names  # number of classes, class names
 
@@ -502,7 +495,7 @@ def run(
     im = torch.zeros(batch_size, 3, *imgsz).to(device)  # image size(1,3,320,192) BCHW iDetection
 
     # Update model
-    if half and not coreml:
+    if half and not (coreml or xml):
         im, model = im.half(), model.half()  # to FP16
     model.train() if train else model.eval()  # training mode = no Detect() layer grid construction
     for k, m in model.named_modules():
@@ -527,7 +520,7 @@ def run(
         print(im.shape[3])
         f[2] = export_onnx(model, im, file, opset, train, dynamic, simplify)
     if xml:  # OpenVINO
-        f[3] = export_openvino(model, im, file, precision=ov_precision)
+        f[3] = export_openvino(model, im, file, half)
     if coreml:
         _, f[4] = export_coreml(model, im, file, int8, half)
 
@@ -575,7 +568,6 @@ def parse_opt():
     parser.add_argument('--batch-size', type=int, default=1, help='batch size')
     parser.add_argument('--device', default='cpu', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--half', action='store_true', help='FP16 half-precision export')
-    parser.add_argument('--ov-fp16', action='store_true', help='FP16 half-precision openvino export')
     parser.add_argument('--inplace', action='store_true', help='set YOLOv5 Detect() inplace=True')
     parser.add_argument('--train', action='store_true', help='model.train() mode')
     parser.add_argument('--optimize', action='store_true', help='TorchScript: optimize for mobile')
