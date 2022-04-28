@@ -59,6 +59,8 @@ def run_experiment2():
     print(exp2_df_results)
     # store results
     filename = f'exp2_results/exp2_df_results_{datetime.now().strftime("%d-%m-%Y_%H-%M")}'
+    exp2_df_results.round(3)
+    print(exp2_df_results)
     exp2_df_results.to_pickle(filename + '.pkl')
     exp2_df_results.to_csv(filename + '.csv')
 
