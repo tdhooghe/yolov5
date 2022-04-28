@@ -168,16 +168,20 @@ def export_onnx(model, im, file, opset, train, dynamic, simplify, prefix=colorst
         LOGGER.info(f'{prefix} export failure: {e}')
 
 
-def export_openvino(model, im, file, prefix=colorstr('OpenVINO:')):
+def export_openvino(model, im, file, ov_fp16, prefix=colorstr('OpenVINO:')):
     # YOLOv5 OpenVINO export
     try:
         check_requirements(('openvino-dev',))  # requires openvino-dev: https://pypi.org/project/openvino-dev/
         import openvino.inference_engine as ie
 
         LOGGER.info(f'\n{prefix} starting export with openvino {ie.__version__}...')
-        f = str(file).replace('.pt', '_openvino_model' + os.sep)
-
-        cmd = f"mo --input_model {file.with_suffix('.onnx')} --output_dir {f}"
+        precision = 'fp16' if ov_fp16 else 'fp32'
+        f = str(file).replace('.pt', f'_openvino_model_{precision}' + os.sep)
+        if ov_fp16:
+            cmd = f"mo --input_model {file.with_suffix('.onnx')} --output_dir {f} --data_type FP16"
+        else:
+            cmd = f"mo --input_model {file.with_suffix('.onnx')} --output_dir {f}"
+        print(f'ovfp16={ov_fp16}')
         subprocess.check_output(cmd, shell=True)
 
         LOGGER.info(f'{prefix} export success, saved as {f} ({file_size(f):.1f} MB)')
@@ -448,13 +452,14 @@ def run(
         device='cpu',  # cuda device, i.e. 0 or 0,1,2,3 or cpu
         include=('torchscript', 'onnx'),  # include formats
         half=False,  # FP16 half-precision export
+        ov_fp16=False, #FP16 OpenVino Export
         inplace=False,  # set YOLOv5 Detect() inplace=True
         train=False,  # model.train() mode
         optimize=False,  # TorchScript: optimize for mobile
         int8=False,  # CoreML/TF INT8 quantization
         dynamic=False,  # ONNX/TF: dynamic axes
         simplify=False,  # ONNX: simplify model
-        opset=12,  # ONNX: opset version
+        opset=15,  # ONNX: opset version
         verbose=False,  # TensorRT: verbose log
         workspace=4,  # TensorRT: workspace size (GB)
         nms=False,  # TF: add NMS to model
@@ -513,7 +518,7 @@ def run(
     if onnx or xml:  # OpenVINO requires ONNX
         f[2] = export_onnx(model, im, file, opset, train, dynamic, simplify)
     if xml:  # OpenVINO
-        f[3] = export_openvino(model, im, file)
+        f[3] = export_openvino(model, im, file, ov_fp16)
     if coreml:
         _, f[4] = export_coreml(model, im, file, int8, half)
 
@@ -561,6 +566,7 @@ def parse_opt():
     parser.add_argument('--batch-size', type=int, default=1, help='batch size')
     parser.add_argument('--device', default='cpu', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--half', action='store_true', help='FP16 half-precision export')
+    parser.add_argument('--ov-fp16', action='store_true', help='FP16 half-precision openvino export')
     parser.add_argument('--inplace', action='store_true', help='set YOLOv5 Detect() inplace=True')
     parser.add_argument('--train', action='store_true', help='model.train() mode')
     parser.add_argument('--optimize', action='store_true', help='TorchScript: optimize for mobile')
