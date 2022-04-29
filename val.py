@@ -196,8 +196,10 @@ def run(
         if cuda:
             im = im.to(device, non_blocking=True)
             targets = targets.to(device)
+        pil_image = torch.squeeze(im).permute(1, 2, 0).cpu().numpy()
         im = im.half() if half else im.float()  # uint8 to fp16/32
         im /= 255  # 0 - 255 to 0.0 - 1.0
+
         nb, _, height, width = im.shape  # batch size, channels, height, width
         t2 = time_sync()
         dt[0] += t2 - t1
@@ -214,7 +216,8 @@ def run(
         targets[:, 2:] *= torch.tensor((width, height, width, height), device=device)  # to pixels
         lb = [targets[targets[:, 0] == i, 1:] for i in range(nb)] if save_hybrid else []  # for autolabelling
         t3 = time_sync()
-        out = non_max_suppression(out, conf_thres, iou_thres, labels=lb, multi_label=True, agnostic=single_cls)
+        out = non_max_suppression(out, pil_image, conf_thres, iou_thres, labels=lb, multi_label=True,
+                                  agnostic=single_cls)
         dt[2] += time_sync() - t3
 
         # Metrics
@@ -326,7 +329,8 @@ def run(
     maps = np.zeros(nc) + map
     for i, c in enumerate(ap_class):
         maps[c] = ap[i]
-    return (mp, mr, map50, map, *(loss.cpu() / len(dataloader)).tolist()), maps, t
+    return (mp, mr, map50, map, *(loss.cpu() / len(dataloader)).tolist()), maps, t, names, ap, ap_class, p, r, tp, fp
+    # added names, tp, fp, p, r
 
 
 def parse_opt():

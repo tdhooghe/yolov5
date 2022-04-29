@@ -23,6 +23,7 @@ from pathlib import Path
 from subprocess import check_output
 from typing import Optional
 from zipfile import ZipFile
+from PIL import Image
 
 import cv2
 import numpy as np
@@ -735,13 +736,15 @@ def clip_coords(boxes, shape):
 
 
 def non_max_suppression(prediction,
+                        pil_image,
                         conf_thres=0.25,
                         iou_thres=0.45,
                         classes=None,
                         agnostic=False,
                         multi_label=False,
                         labels=(),
-                        max_det=300):
+                        max_det=300,
+                        ):
     """Non-Maximum Suppression (NMS) on inference results to reject overlapping bounding boxes
 
     Returns:
@@ -760,7 +763,7 @@ def non_max_suppression(prediction,
     # min_wh = 2  # (pixels) minimum box width and height
     max_wh = 7680  # (pixels) maximum box width and height
     max_nms = 30000  # maximum number of boxes into torchvision.ops.nms()
-    time_limit = 0.1 + 0.03 * bs  # seconds to quit after
+    time_limit = 0.1 + 0.02 * bs  # seconds to quit after
     redundant = True  # require redundant detections
     multi_label &= nc > 1  # multiple labels per box (adds 0.5ms/img)
     merge = False  # use merge-NMS
@@ -831,6 +834,7 @@ def non_max_suppression(prediction,
         output[xi] = x[i]
         if (time.time() - t) > time_limit:
             LOGGER.warning(f'WARNING: NMS time limit {time_limit:.3f}s exceeded')
+            Image.fromarray(pil_image, mode='RGB').show()
             break  # time limit exceeded
 
     return output
