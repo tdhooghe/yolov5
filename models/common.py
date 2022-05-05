@@ -332,16 +332,30 @@ class DetectMultiBackend(nn.Module):
             if 'stride' in meta:
                 stride, names = int(meta['stride']), eval(meta['names'])
         elif xml:  # OpenVINO
+
             LOGGER.info(f'Loading {w} for OpenVINO inference...')
             check_requirements(('openvino-dev',))  # requires openvino-dev: https://pypi.org/project/openvino-dev/
             import openvino.inference_engine as ie
-            core = ie.IECore()
+            from openvino.runtime import Core
+
             if not Path(w).is_file():  # if not *.xml
                 w = next(Path(w).glob('*.xml'))  # get *.xml file from *_openvino_model dir
+
+            # core = Core()
+            # model = core.read_model(model=w, weights=Path(w).with_suffix('.bin'))
+            # config = {"PERFORMANCE_HINT": "THROUGHPUT"}
+            # compiled_model = core.compile_model(model, config=config, device_name='AUTO')
+            # input_layer = next(iter(compiled_model.inputs))
+            # output_layer = next(iter(compiled_model.outputs))
+
+            core = ie.IECore()
             network = core.read_network(model=w, weights=Path(w).with_suffix('.bin'))  # *.xml, *.bin paths
             # input_blob_name = next(iter(network.input_info))  # Get names of the input blob
-            # network.input_info[input_blob_name].precision = 'FP16'
-            executable_network = core.load_network(network, device_name='GPU', num_requests=1)
+            # print(input_blob_name)
+            # test = network.input_info[input_blob_name] #.precision = 'FP16
+            dev = "AUTO" if 'int8' in str(w) else "GPU"
+            executable_network = core.load_network(network, device_name=dev, num_requests=0)
+            print(executable_network.infer)
         elif engine:  # TensorRT
             LOGGER.info(f'Loading {w} for TensorRT inference...')
             import tensorrt as trt  # https://developer.nvidia.com/nvidia-tensorrt-download
@@ -424,12 +438,20 @@ class DetectMultiBackend(nn.Module):
             im = im.cpu().numpy()  # torch to numpy
             y = self.session.run([self.session.get_outputs()[0].name], {self.session.get_inputs()[0].name: im})[0]
         elif self.xml:  # OpenVINO
-            im = im.cpu().numpy()  #.astype("float16")  # for FP16
-            desc = self.ie.TensorDesc(precision='FP32', dims=im.shape, layout='NCHW')  # Tensor Description
+            im = im.cpu().numpy()  # .astype("float16")  # for FP16 # shape (1,3,640,640) or (1,3,1280,1280)
+            # img = np.squeeze(im)
+            # pil_img = np.moveaxis(img, 0, 2)
+            # Image.fromarray(pil_img, mode='RGB').show()
+            # request = self.compiled_model.create_infer_request()
+            # request.infer(inputs={self.input_layer.any_name: im})
+            # y = request.get_output_tensor(self.output_layer.index).data
+
+            desc = self.ie.TensorDesc(precision='FP32', dims=im.shape, layout='NCHW')  # Tensor Description,
+            # precision regarding memory precision
             request = self.executable_network.requests[0]  # inference request
             request.set_blob(blob_name='images', blob=self.ie.Blob(desc, im))  # name=next(iter(request.input_blobs))
             request.infer()
-            y = request.output_blobs['output'].buffer  # name=next(iter(request.output_blobs))
+            y = request.output_blobs['output'].buffer  # name=next(iter(request.output_blobs)); shape (1, 25200, 85)
         elif self.engine:  # TensorRT
             assert im.shape == self.bindings['images'].shape, (im.shape, self.bindings['images'].shape)
             self.binding_addrs['images'] = int(im.data_ptr())

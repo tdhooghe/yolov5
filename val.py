@@ -216,7 +216,7 @@ def run(
         targets[:, 2:] *= torch.tensor((width, height, width, height), device=device)  # to pixels
         lb = [targets[targets[:, 0] == i, 1:] for i in range(nb)] if save_hybrid else []  # for autolabelling
         t3 = time_sync()
-        out = non_max_suppression(out, pil_image, conf_thres, iou_thres, labels=lb, multi_label=True,
+        out = non_max_suppression(out, conf_thres, iou_thres, labels=lb, multi_label=True,
                                   agnostic=single_cls)
         dt[2] += time_sync() - t3
 
@@ -329,7 +329,8 @@ def run(
     maps = np.zeros(nc) + map
     for i, c in enumerate(ap_class):
         maps[c] = ap[i]
-    return (mp, mr, map50, map, *(loss.cpu() / len(dataloader)).tolist()), maps, t, names, ap, ap_class, p, r, tp, fp
+    return (mp, mr, map50, map, *(loss.cpu() / len(dataloader)).tolist()), maps, t, names, ap, ap50, ap_class, p, r, \
+           tp, fp
     # added names, tp, fp, p, r
 
 

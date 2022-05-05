@@ -1,36 +1,33 @@
-from detect import run
+from experiment1 import export_models
+from val import run
 from datetime import datetime
+import numpy as np
 import pandas as pd
-import subprocess
-from pathlib import Path
 
-MODELS = ["yolov5n", "yolov5s", "yolov5m", "yolov5l", "yolov5n6", "yolov5s6",
+MODELS = ["yolov5n", "yolov5s", "yolov5m", "yolov5l",
+          "yolov5n6", "yolov5s6",
           "yolov5m6", "yolov5l6"]
-
-MODEL = ["yolov5n_openvino_model"]
 
 # BATCH_SIZES = [1, 16, 32]
 PRECISION = ['fp16', 'fp32']
+# %%
+CLASSES = ['person', 'car', 'motorcycle', 'bus', 'truck', 'baseball bat', 'knife', 'cell phone']
 
 
-def export_models():
-    # create the models
-    for model in MODELS:
-        for precision in PRECISION:
-            path = Path(model + '_openvino_model_' + precision)
-            if not path.is_dir():
-                imgsize = 1280 if '6' in model else 640
-                if precision == 'fp16':
-                    cmd = f'python export.py --weights {model} --imgsz {imgsize} --include openvino --ov-fp16'
-                else:
-                    cmd = f'python export.py --weights {model} --imgsz {imgsize} --include openvino'
-                subprocess.check_output(cmd, shell=True)
-
-
+# %%
+def run_test():
+    # run(data='data/coco128.yaml', weights='yolov5m_openvino_model_fp16')
+    run(data='data/coco128.yaml', weights='optimized_model\yolov5n_int8.xml', verbose=True)
 def run_experiment2():
-    column_names = ["model", "img_size", "precision", "prep_time", "NMS_time", "latency", "inference_time",
-                    "total_time",
-                    "FPS", "experiment_time"]
+    # glob_metrics: mp, mr, map50, map
+    # t: prep., inference, NMS
+    # person: 0, car: 2, motorcycle: 3, bus: 5, truck: 7, baseball bat: 38, knife: 48, cell phone: 76
+
+    column_names = ["model", "img_size", "precision", "mAP:@.5", "mAP@.5:.95", "person_mAP.5", "car_mAP.5",
+                    "motorcycle_mAP.5", "bus_mAP.5", "truck_mAP.5", "baseball_bat_mAP.5", "knife_mAP.5",
+                    "cell_phone_mAP.5", "person_mAP", "car_mAP", "motorcycle_mAP", "bus_mAP", "truck_mAP",
+                    "baseball_bat_mAP", "knife_mAP", "cell_phone_mAP", "experiment_time"
+                    ]
     exp2_df_results = pd.DataFrame(columns=column_names)
 
     counter = 0
@@ -41,18 +38,39 @@ def run_experiment2():
             start_experiment = datetime.now()
             row = [model, imgsize, precision]
             print(row)
-            temp = run(
-                weights=model + '_openvino_model_' + precision,
-                source="C:/Users/104JVE/PycharmProjects/datasets/coco/images/exp2/",  # 000000463199.jpg
-                imgsz=(imgsize, imgsize),
-                nosave=True,
-            )
-            row.append(temp[0])  # preprocessing
-            row.append(temp[2])  # NMS
-            row.append(temp[0] + temp[2])  # latency (prep + NMS)
-            row.append(temp[1])  # inference
-            row.append(sum(temp))  # total time
-            row.append(1 / (sum(temp)) * 1E3)  # FPS
+            glob_metrics, maps, t, names, ap, ap50, ap_class, p, r, tp, fp = \
+                run(data='data/coco.yaml', weights=f'{model}_openvino_model_{precision}', imgsz=imgsize, verbose=True)
+
+            # process mAP results per class
+            coco_class_index = {}
+            for class_name in CLASSES:
+                for k, v in names.items():
+                    if class_name == v:
+                        coco_class_index[v] = k
+
+            class_ap_index = {}
+            for (k, v) in coco_class_index.items():
+                class_ap_index[k] = np.where(ap_class == v)[0][0]
+
+            class_ap50 = {}
+            class_ap = {}
+
+            for (k, v) in class_ap_index.items():
+                class_ap50[k] = ap50[v]
+                class_ap[k] = ap[v]
+
+            row.append(np.mean(list(class_ap50.values())))
+            row.append(np.mean(list(class_ap.values())))
+
+            # append class specific mAPs
+            for mAP50 in class_ap50.values():
+                row.append(mAP50)
+            for mAP in class_ap.values():
+                row.append(mAP)
+
+            # check if mAP equals mean of AP print(f'mAP50- old: {glob_metrics[2]} new: {np.mean(ap50)} mAP- old: {
+            # glob_metrics[3]} new: {np.mean(ap)}')
+
             row.append((datetime.now() - start_experiment).seconds)  # duration of experiment
             exp2_df_results.loc[counter] = row
             counter += 1
@@ -66,5 +84,6 @@ def run_experiment2():
 
 
 if __name__ == "__main__":
-    export_models()
-    run_experiment2()
+    #export_models()
+    #run_experiment2()
+    run_test()
