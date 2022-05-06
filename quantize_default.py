@@ -17,9 +17,7 @@ from utils.augmentations import letterbox
 from openvino.runtime import Core
 from utils.general import imread
 from yaspin import yaspin
-from experiment1 import MODELS
-from experiment1 import export_models
-
+from export_openvino_models import  export_models, MODELS
 
 class DetectionDataLoader(DataLoader):
     # https://docs.openvino.ai/latest/notebooks/111-detection-quantization-with-output.html#run-quantization-pipeline
@@ -62,8 +60,9 @@ class DetectionDataLoader(DataLoader):
 
 
 def quantize_models():
-    for model in MODELS:
-        ir_path = Path(f"{model}_openvino_model_fp16/{model}.xml")
+    for model_name in MODELS:
+        imgsize = 1280 if '6' in model_name else 640
+        ir_path = Path(f"{model_name}_openvino_model_fp16/{model_name}.xml")
 
         # %%
         model_config = {
@@ -88,7 +87,7 @@ def quantize_models():
 
         # create data loader
         data_loader = DetectionDataLoader(
-            basedir="../datasets/coco/images/exp2", target_size=(640, 640)
+            basedir="../datasets/coco/images/quantize", target_size=(imgsize, imgsize)
         )
         ir_model = load_model(model_config=model_config)  # load model from model config
         engine = IEEngine(config=engine_config, data_loader=data_loader)  # initialize engine
@@ -107,14 +106,12 @@ def quantize_models():
 
         compressed_model_paths = save_model(
             model=compressed_model,
-            save_path=f"{model}_openvino_model_FP16",
-            model_name=f"{model}",
+            save_path=f"{model_name}_openvino_model_int8",
+            model_name=f"{model_name}",
         )
 
         compressed_model_path = compressed_model_paths[0]["model"]
         print("The quantized model is stored at", compressed_model_path)
-
-        # %%
 
 
 class ImageLoader(DataLoader):

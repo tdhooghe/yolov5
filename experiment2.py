@@ -8,16 +8,11 @@ MODELS = ["yolov5n", "yolov5s", "yolov5m", "yolov5l",
           "yolov5n6", "yolov5s6",
           "yolov5m6", "yolov5l6"]
 
-# BATCH_SIZES = [1, 16, 32]
-PRECISION = ['fp16', 'fp32']
+PRECISION = ['int8', 'fp16', 'fp32']
 # %%
 CLASSES = ['person', 'car', 'motorcycle', 'bus', 'truck', 'baseball bat', 'knife', 'cell phone']
 
 
-# %%
-def run_test():
-    # run(data='data/coco128.yaml', weights='yolov5m_openvino_model_fp16')
-    run(data='data/coco128.yaml', weights='optimized_model\yolov5n_int8.xml', verbose=True)
 def run_experiment2():
     # glob_metrics: mp, mr, map50, map
     # t: prep., inference, NMS
@@ -84,6 +79,5 @@ def run_experiment2():
 
 
 if __name__ == "__main__":
-    #export_models()
-    #run_experiment2()
-    run_test()
+    run_experiment2()
+

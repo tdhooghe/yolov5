@@ -1,38 +1,12 @@
 from detect import run
 from datetime import datetime
 import pandas as pd
-import subprocess
-from pathlib import Path
 
 MODELS = ["yolov5n", "yolov5s", "yolov5m", "yolov5l", "yolov5n6", "yolov5s6",
           "yolov5m6", "yolov5l6"]
 
-MODEL = ["yolov5n_openvino_model"]
+PRECISION = ['int8', 'fp16', 'fp32']
 
-# BATCH_SIZES = [1, 16, 32]
-PRECISION = ['fp16', 'fp32']
-
-
-def export_models():
-    # create the models
-    for model in MODELS:
-        for precision in PRECISION:
-            path = Path(model + '_openvino_model_' + precision)
-            if not path.is_dir():
-                imgsize = 1280 if '6' in model else 640
-                weights = model + '.pt'
-                if precision == 'fp16':
-                    cmd = f'python export.py --weights {weights} --imgsz {imgsize} --include openvino --ov-fp16'
-                else:
-                    cmd = f'python export.py --weights {weights} --imgsz {imgsize} --include openvino'
-                subprocess.check_output(cmd, shell=True)
-            break
-        break
-
-
-def run_test():
-    # run(data='data/coco128.yaml', weights='yolov5m_openvino_model_fp16')
-    run(source="../datasets/coco/images/exp2/", weights='optimized_model\yolov5n_int8.xml')
 
 def run_experiment1():
     column_names = ["model", "img_size", "precision", "prep_time", "NMS_time", "latency", "inference_time",
@@ -62,17 +36,16 @@ def run_experiment1():
             row.append(1 / (sum(temp)) * 1E3)  # FPS
             row.append((datetime.now() - start_experiment).seconds)  # duration of experiment
             print(row)
-            break
             exp2_df_results.loc[counter] = row
             counter += 1
-        break
-    # print(exp2_df_results)
-    # # store results
-    # filename = f'exp2_results/exp2_df_results_{datetime.now().strftime("%d-%m-%Y_%H-%M")}'
-    # exp2_df_results.round(3)
-    # print(exp2_df_results)
-    # exp2_df_results.to_pickle(filename + '.pkl')
-    # exp2_df_results.to_csv(filename + '.csv')
+
+    print(exp2_df_results)
+    # store results
+    filename = f'exp2_results/exp2_df_results_{datetime.now().strftime("%d-%m-%Y_%H-%M")}'
+    exp2_df_results.round(3)
+    print(exp2_df_results)
+    exp2_df_results.to_pickle(filename + '.pkl')
+    exp2_df_results.to_csv(filename + '.csv')
 
 
 if __name__ == "__main__":

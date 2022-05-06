@@ -168,20 +168,20 @@ def export_onnx(model, im, file, opset, train, dynamic, simplify, prefix=colorst
         LOGGER.info(f'{prefix} export failure: {e}')
 
 
-def export_openvino(model, im, file, ov_fp16, prefix=colorstr('OpenVINO:')):
+def export_openvino(model, im, file, ov_precision, prefix=colorstr('OpenVINO:')):
     # YOLOv5 OpenVINO export
     try:
         check_requirements(('openvino-dev',))  # requires openvino-dev: https://pypi.org/project/openvino-dev/
         import openvino.inference_engine as ie
 
         LOGGER.info(f'\n{prefix} starting export with openvino {ie.__version__}...')
-        precision = 'fp16' if ov_fp16 else 'fp32'
-        f = str(file).replace('.pt', f'_openvino_model_{precision}' + os.sep)
-        if ov_fp16:
+
+        f = str(file).replace('.pt', f'_openvino_model_{ov_precision}' + os.sep)
+        if ov_precision == 'fp16':
             cmd = f"mo --input_model {file.with_suffix('.onnx')} --output_dir {f} --data_type FP16"
         else:
-            cmd = f"mo --input_model {file.with_suffix('.onnx')} --output_dir {f}"
-        print(f'ovfp16={ov_fp16}')
+            cmd = f"mo --input_model {file.with_suffix('.onnx')} --output_dir {f} --data_type FP32"
+        print(f'ovfp16={ov_precision}')
         subprocess.check_output(cmd, shell=True)
 
         LOGGER.info(f'{prefix} export success, saved as {f} ({file_size(f):.1f} MB)')
