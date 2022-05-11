@@ -12,7 +12,7 @@ PRECISION = ['fp16']
 IMAGE_SIZES = [320, 480, 960]
 
 
-def run_exp1_speed():
+def run_exp2_res_speed():
     column_names = ["model", "precision", "prep_time", "NMS_time", "latency", "inference_time",
                     "total_time",
                     "FPS", "experiment_time"]
@@ -54,4 +54,4 @@ def run_exp1_speed():
 
 
 if __name__ == "__main__":
-    run_exp1_speed()
+    run_exp2_res_speed()
