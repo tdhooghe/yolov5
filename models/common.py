@@ -354,7 +354,7 @@ class DetectMultiBackend(nn.Module):
             # print(input_blob_name)
             # test = network.input_info[input_blob_name] #.precision = 'FP16
             dev = "AUTO" if 'int8' in str(w) else "GPU"
-            executable_network = core.load_network(network, device_name="AUTO", num_requests=0)
+            executable_network = core.load_network(network, device_name='GPU', num_requests=0)
             print(executable_network.infer)
         elif engine:  # TensorRT
             LOGGER.info(f'Loading {w} for TensorRT inference...')
@@ -507,8 +507,10 @@ class DetectMultiBackend(nn.Module):
         from export import export_formats
         suffixes = list(export_formats().Suffix) + ['.xml']  # export suffixes
         check_suffix(p, suffixes)  # checks
+        openvino = True if 'openvino' in p else False  # make sure openvino models gets recognized with other names
         p = Path(p).name  # eliminate trailing separators
         pt, jit, onnx, xml, engine, coreml, saved_model, pb, tflite, edgetpu, tfjs, xml2 = (s in p for s in suffixes)
+        xml = True if openvino else False  # make sure openvino models gets recognized with other names
         xml |= xml2  # *_openvino_model or *.xml
         tflite &= not edgetpu  # *.tflite
         return pt, jit, onnx, xml, engine, coreml, saved_model, pb, tflite, edgetpu, tfjs

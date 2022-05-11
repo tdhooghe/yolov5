@@ -115,7 +115,11 @@ def export_onnx(model, im, file, opset, train, dynamic, simplify, prefix=colorst
         import onnx
 
         LOGGER.info(f'\n{prefix} starting export with onnx {onnx.__version__}...')
-        f = file.with_suffix('.onnx')
+        f = Path(f'{file.stem}_{im.shape[-1]}')
+        f = f.with_suffix('.onnx')
+
+        os.mkdir('onnx_models') if not os.path.exists('onnx_models') else None
+        f = f'onnx_models/{f}'
 
         torch.onnx.export(
             model,
@@ -168,20 +172,20 @@ def export_onnx(model, im, file, opset, train, dynamic, simplify, prefix=colorst
         LOGGER.info(f'{prefix} export failure: {e}')
 
 
-def export_openvino(model, im, file, ov_precision, imgsize, prefix=colorstr('OpenVINO:')):
+def export_openvino(model, im, file, ov_precision, prefix=colorstr('OpenVINO:')):
     # YOLOv5 OpenVINO export
     try:
         check_requirements(('openvino-dev',))  # requires openvino-dev: https://pypi.org/project/openvino-dev/
         import openvino.inference_engine as ie
 
         LOGGER.info(f'\n{prefix} starting export with openvino {ie.__version__}...')
-
-        f = str(file).replace('.pt', f'_openvino_model_{ov_precision}_{imgsize[0]}' + os.sep)
+        input_model = Path(f'onnx_models/{file.stem}_{im.shape[-1]}').with_suffix('.onnx')
+        f = Path('openvino_models/' + str(file).replace('.pt', f'_{ov_precision}_{im.shape[-1]}' + os.sep))
         if ov_precision == 'fp16':
-            cmd = f"mo --input_model {file.with_suffix('.onnx')} --output_dir {f} --data_type FP16"
+            cmd = f"mo --input_model {input_model} --output_dir {f} --data_type FP16"
         else:
-            cmd = f"mo --input_model {file.with_suffix('.onnx')} --output_dir {f} --data_type FP32"
-        print(f'ovfp16={ov_precision}')
+            cmd = f"mo --input_model {input_model} --output_dir {f} --data_type FP32"
+        print(f'precision={ov_precision}')
         subprocess.check_output(cmd, shell=True)
 
         LOGGER.info(f'{prefix} export success, saved as {f} ({file_size(f):.1f} MB)')
@@ -518,9 +522,10 @@ def run(
     if engine:  # TensorRT required before ONNX
         f[1] = export_engine(model, im, file, train, half, simplify, workspace, verbose)
     if onnx or xml:  # OpenVINO requires ONNX
+        print(im.shape[3])
         f[2] = export_onnx(model, im, file, opset, train, dynamic, simplify)
     if xml:  # OpenVINO
-        f[3] = export_openvino(model, im, file, ov_fp16, imgsz)
+        f[3] = export_openvino(model, im, file, ov_fp16)
     if coreml:
         _, f[4] = export_coreml(model, im, file, int8, half)
 

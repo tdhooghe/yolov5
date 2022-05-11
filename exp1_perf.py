@@ -13,7 +13,7 @@ PRECISION = ['int8', 'fp16', 'fp32']
 CLASSES = ['person', 'car', 'motorcycle', 'bus', 'truck', 'baseball bat', 'knife', 'cell phone']
 
 
-def run_exp1_det():
+def run_exp1_perf():
     # glob_metrics: mp, mr, map50, map
     # t: prep., inference, NMS
     # person: 0, car: 2, motorcycle: 3, bus: 5, truck: 7, baseball bat: 38, knife: 48, cell phone: 76
@@ -23,7 +23,7 @@ def run_exp1_det():
                     "cell_phone_mAP.5", "person_mAP", "car_mAP", "motorcycle_mAP", "bus_mAP", "truck_mAP",
                     "baseball_bat_mAP", "knife_mAP", "cell_phone_mAP", "experiment_time"
                     ]
-    exp1_det = pd.DataFrame(columns=column_names)
+    exp1_perf = pd.DataFrame(columns=column_names)
 
     counter = 0
     for model in MODELS:
@@ -34,7 +34,7 @@ def run_exp1_det():
             row = [model, imgsize, precision]
             print(row)
             glob_metrics, maps, t, names, ap, ap50, ap_class, p, r, tp, fp = \
-                run(data='data/coco.yaml', weights=f'{model}_openvino_model_{precision}', imgsz=imgsize, verbose=True)
+                run(data='data/coco.yaml', weights='openvino/yolov5nfp16_320', imgsz=imgsize, verbose=True)
 
             # process mAP results per class
             coco_class_index = {}
@@ -68,19 +68,19 @@ def run_exp1_det():
             # glob_metrics[3]} new: {np.mean(ap)}')
 
             row.append((datetime.now() - start_experiment).seconds)  # duration of experiment
-            exp1_det.loc[counter] = row
+            exp1_perf.loc[counter] = row
             counter += 1
             break
         break
-    print(exp1_det)
+    print(exp1_perf)
     # store results
-    filename = f'exp1_results/exp1_det_{datetime.now().strftime("%d-%m-%Y_%H-%M")}'
-    exp1_det.round(3)
-    print(exp1_det)
-    exp1_det.to_pickle(filename + '.pkl')
-    exp1_det.to_csv(filename + '.csv')
+    filename = f'exp1_results/exp1_perf_{datetime.now().strftime("%d-%m-%Y_%H-%M")}'
+    exp1_perf.round(3)
+    print(exp1_perf)
+    exp1_perf.to_pickle(filename + '.pkl')
+    exp1_perf.to_csv(filename + '.csv')
 
 
 if __name__ == "__main__":
-    run_exp1_det()
+    run_exp1_perf()
 
