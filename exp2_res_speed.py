@@ -12,16 +12,16 @@ PRECISION = ['fp16']
 IMAGE_SIZES = [320, 480, 960]
 
 
-def run_exp2_res_speed():
+def run_exp2_res_speed(models, precisions, image_sizes):
     column_names = ["model", "precision", "prep_time", "NMS_time", "latency", "inference_time",
                     "total_time",
                     "FPS", "experiment_time"]
     exp2_res_speed = pd.DataFrame(columns=column_names)
 
     counter = 0
-    for model in MODELS:
-        for precision in PRECISION:
-            for imgsize in IMAGE_SIZES:
+    for model in models:
+        for precision in precisions:
+            for imgsize in image_sizes:
                 start_experiment = datetime.now()
                 row = [model, precision]
                 print(row)
@@ -54,4 +54,5 @@ def run_exp2_res_speed():
 
 
 if __name__ == "__main__":
-    run_exp2_res_speed()
+    run_exp2_res_speed(MODELS, PRECISION, IMAGE_SIZES)
+    #run_exp2_res_speed(['yolov5n'], ['fp16'], [320])

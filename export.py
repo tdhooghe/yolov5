@@ -172,7 +172,7 @@ def export_onnx(model, im, file, opset, train, dynamic, simplify, prefix=colorst
         LOGGER.info(f'{prefix} export failure: {e}')
 
 
-def export_openvino(model, im, file, ov_precision, prefix=colorstr('OpenVINO:')):
+def export_openvino(model, im, file, precision, prefix=colorstr('OpenVINO:')):
     # YOLOv5 OpenVINO export
     try:
         check_requirements(('openvino-dev',))  # requires openvino-dev: https://pypi.org/project/openvino-dev/
@@ -180,12 +180,14 @@ def export_openvino(model, im, file, ov_precision, prefix=colorstr('OpenVINO:'))
 
         LOGGER.info(f'\n{prefix} starting export with openvino {ie.__version__}...')
         input_model = Path(f'onnx_models/{file.stem}_{im.shape[-1]}').with_suffix('.onnx')
-        f = Path('openvino_models/' + str(file).replace('.pt', f'_{ov_precision}_{im.shape[-1]}' + os.sep))
-        if ov_precision == 'fp16':
+        f = Path('openvino_models/' + str(file).replace('.pt', f'_{precision}_{im.shape[-1]}' + os.sep))
+        if precision == 'fp16':
             cmd = f"mo --input_model {input_model} --output_dir {f} --data_type FP16"
-        else:
+        elif precision == 'fp32':
             cmd = f"mo --input_model {input_model} --output_dir {f} --data_type FP32"
-        print(f'precision={ov_precision}')
+        else:
+            print(x)
+            print(f'Type {precision} is not a valid type')
         subprocess.check_output(cmd, shell=True)
 
         LOGGER.info(f'{prefix} export success, saved as {f} ({file_size(f):.1f} MB)')
@@ -458,7 +460,7 @@ def run(
         device='cpu',  # cuda device, i.e. 0 or 0,1,2,3 or cpu
         include=('torchscript', 'onnx'),  # include formats
         half=False,  # FP16 half-precision export
-        ov_fp16=False, #FP16 OpenVino Export
+        ov_precision=False, #FP16 OpenVino Export
         inplace=False,  # set YOLOv5 Detect() inplace=True
         train=False,  # model.train() mode
         optimize=False,  # TorchScript: optimize for mobile
@@ -525,7 +527,7 @@ def run(
         print(im.shape[3])
         f[2] = export_onnx(model, im, file, opset, train, dynamic, simplify)
     if xml:  # OpenVINO
-        f[3] = export_openvino(model, im, file, ov_fp16)
+        f[3] = export_openvino(model, im, file, precision=ov_precision)
     if coreml:
         _, f[4] = export_coreml(model, im, file, int8, half)
 
