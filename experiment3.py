@@ -1,17 +1,19 @@
-from experiment1 import export_models
 from val import run
 from datetime import datetime
 import numpy as np
 import pandas as pd
 
 MODELS = ["yolov5n", "yolov5s", "yolov5m", "yolov5l",
-          "yolov5n6", "yolov5s6",
-          "yolov5m6", "yolov5l6"]
+          #"yolov5n6", "yolov5s6", "yolov5m6", "yolov5l6"
+          ]
 
-PRECISION = ['int8', 'fp16', 'fp32']
+IMAGE_SIZE = ['int8', 'fp16', 'fp32']  # only work with FP16 models
+
 # %%
 CLASSES = ['person', 'car', 'motorcycle', 'bus', 'truck', 'baseball bat', 'knife', 'cell phone']
 
+# train models only with above classes, remove the others; the previous experiment is about general selection so then
+# the other classes do no matter
 
 def run_experiment2():
     # glob_metrics: mp, mr, map50, map
@@ -27,14 +29,14 @@ def run_experiment2():
 
     counter = 0
     for model in MODELS:
-        imgsize = 1280 if '6' in model else 640
+        imgsize = 1280
         for precision in PRECISION:
             # for batch_size in BATCH_SIZES:
             start_experiment = datetime.now()
             row = [model, imgsize, precision]
             print(row)
             glob_metrics, maps, t, names, ap, ap50, ap_class, p, r, tp, fp = \
-                run(data='data/coco.yaml', weights=f'{model}_openvino_model_{precision}', imgsz=imgsize, verbose=True)
+                run(data='data/coco128.yaml', weights=f'{model}_openvino_model_{precision}', imgsz=imgsize, verbose=True)
 
             # process mAP results per class
             coco_class_index = {}

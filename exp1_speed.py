@@ -2,18 +2,18 @@ from detect import run
 from datetime import datetime
 import pandas as pd
 
-MODELS = [#"yolov5n", "yolov5s", "yolov5m", "yolov5l"
-          "yolov5n6", "yolov5s6", "yolov5m6", #"yolov5l6"
+MODELS = ["yolov5n", "yolov5s", "yolov5m", "yolov5l"
+          # "yolov5n6", "yolov5s6", "yolov5m6", #"yolov5l6"
           ]
 
 PRECISION = ['int8', 'fp16', 'fp32']
 
 
-def run_experiment1():
+def run_exp1_speed():
     column_names = ["model", "precision", "prep_time", "NMS_time", "latency", "inference_time",
                     "total_time",
                     "FPS", "experiment_time"]
-    exp1_df_results = pd.DataFrame(columns=column_names)
+    exp1_speed = pd.DataFrame(columns=column_names)
 
     counter = 0
     for model in MODELS:
@@ -36,16 +36,16 @@ def run_experiment1():
             row.append(1 / (sum(temp)) * 1E3)  # FPS
             row.append((datetime.now() - start_experiment).seconds)  # duration of experiment
             print(row)
-            exp1_df_results.loc[counter] = row
+            exp1_speed.loc[counter] = row
             counter += 1
-    print(exp1_df_results)
+    print(exp1_speed)
     # store results
-    filename = f'exp1_results/exp1_df_results_{datetime.now().strftime("%d-%m-%Y_%H-%M")}'
-    exp1_df_results.round(3)
-    print(exp1_df_results)
-    exp1_df_results.to_pickle(filename + '.pkl')
-    exp1_df_results.to_csv(filename + '.csv')
+    filename = f'exp1_results/exp1_speed_{datetime.now().strftime("%d-%m-%Y_%H-%M")}'
+    exp1_speed.round(3)
+    print(exp1_speed)
+    exp1_speed.to_pickle(filename + '.pkl')
+    exp1_speed.to_csv(filename + '.csv')
 
 
 if __name__ == "__main__":
-    run_experiment1()
+    run_exp1_speed()

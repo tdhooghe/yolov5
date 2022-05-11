@@ -17,7 +17,7 @@ from utils.augmentations import letterbox
 from openvino.runtime import Core
 from utils.general import imread
 from yaspin import yaspin
-from export_openvino_models import  export_models, MODELS
+from export_openvino_models import export_models, MODELS
 
 class DetectionDataLoader(DataLoader):
     # https://docs.openvino.ai/latest/notebooks/111-detection-quantization-with-output.html#run-quantization-pipeline
@@ -158,5 +158,5 @@ class ImageLoader(DataLoader):
 
 
 if __name__ == "__main__":
-    export_models()
+    #export_models()
     quantize_models()
