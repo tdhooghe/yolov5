@@ -1,15 +1,17 @@
 from export import run
 
-MODELS = ["yolov5n", "yolov5s", "yolov5m", "yolov5l",
-          # "yolov5n6", "yolov5s6", "yolov5m6", "yolov5l6"
-          ]
+MODELS = ["yolov5n", "yolov5s", "yolov5m", "yolov5l"]
+
+MODELS_P6 = ["yolov5n6", "yolov5s6", "yolov5m6", "yolov5l6"]
 
 PRECISION = ['fp16']
-             # 'fp32'
 
 
 # try different images sizes, 640 not necessary as already pretrained on 640
-IMAGE_SIZES = [320, 480, 960]
+IMAGE_SIZES = [320, 480, 640, 800, 960]
+
+IMAGE_SIZES_P6 = [256, 448, 640, 832, 1024]  # image size for P6 models (multiple of stride 64)
+
 
 
 def export_models(models, precisions, image_sizes):
@@ -23,6 +25,6 @@ def export_models(models, precisions, image_sizes):
 
 
 if __name__ == "__main__":
-    #export_models(MODELS, PRECISION, IMAGE_SIZES)
-    export_models(['yolov5n'], ['fp16'], [320])
+    export_models(MODELS, PRECISION, IMAGE_SIZES)
+    #export_models(MODELS, ['fp16'], IMAGE_SIZES)
 

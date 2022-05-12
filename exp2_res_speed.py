@@ -3,17 +3,19 @@ from datetime import datetime
 import pandas as pd
 from pathlib import Path
 
-MODELS = ["yolov5n", "yolov5s", "yolov5m", "yolov5l"
-          # "yolov5n6", "yolov5s6", "yolov5m6", #"yolov5l6"
-          ]
+MODELS = ["yolov5n", "yolov5s", "yolov5m", "yolov5l"]
+
+MODELS_P6 = ["yolov5n6", "yolov5s6", "yolov5m6", "yolov5l6"]
 
 PRECISION = ['fp16']
 
-IMAGE_SIZES = [320, 480, 960]
+IMAGE_SIZES = [320, 480, 600, 800, 960]
+
+IMAGE_SIZES_P6 = [256, 448, 640, 832, 1024]
 
 
 def run_exp2_res_speed(models, precisions, image_sizes):
-    column_names = ["model", "precision", "prep_time", "NMS_time", "latency", "inference_time",
+    column_names = ["model", "precision", "resolution", "prep_time", "NMS_time", "latency", "inference_time",
                     "total_time",
                     "FPS", "experiment_time"]
     exp2_res_speed = pd.DataFrame(columns=column_names)
@@ -23,7 +25,7 @@ def run_exp2_res_speed(models, precisions, image_sizes):
         for precision in precisions:
             for imgsize in image_sizes:
                 start_experiment = datetime.now()
-                row = [model, precision]
+                row = [model, precision, imgsize]
                 print(row)
                 model_path = Path(f'./openvino_models/{model}_{precision}_{imgsize}')
                 print(model_path)
@@ -45,7 +47,7 @@ def run_exp2_res_speed(models, precisions, image_sizes):
                 counter += 1
     print(exp2_res_speed)
     # store results
-    filename = Path(f'results/experiments/exp2/res_speed_{datetime.now().strftime("%d-%m-%Y_%H-%M")}')
+    filename = Path(f'results/experiments/exp2/{datetime.now().strftime("%y%m%d")}_res_speed')
     filename.parent.mkdir(parents=True, exist_ok=True)
     exp2_res_speed.round(3)
     print(exp2_res_speed)
@@ -54,5 +56,6 @@ def run_exp2_res_speed(models, precisions, image_sizes):
 
 
 if __name__ == "__main__":
-    run_exp2_res_speed(MODELS, PRECISION, IMAGE_SIZES)
-    #run_exp2_res_speed(['yolov5n'], ['fp16'], [320])
+    # run_exp2_res_speed(['yolov5n6'], ['fp16'], [832])
+    run_exp2_res_speed(MODELS_P6, PRECISION, IMAGE_SIZES_P6)
+    # run_exp2_res_speed(MODELS, PRECISION, IMAGE_SIZES)
