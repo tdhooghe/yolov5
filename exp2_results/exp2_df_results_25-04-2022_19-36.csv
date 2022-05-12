@@ -1,9 +1,0 @@
-,model,img_size,prep_time,inference_time,NMS_time,total_time,latency,FPS,experiment_time
-0,yolov5n_openvino_model/yolov5n.xml,640,2.78,46.402,1.858,51.04,4.638,19.593,73
-1,yolov5s_openvino_model/yolov5s.xml,640,2.896,102.406,2.894,108.196,5.79,9.243,135
-2,yolov5m_openvino_model/yolov5m.xml,640,2.629,239.074,3.34,245.043,5.969,4.081,277
-3,yolov5l_openvino_model/yolov5l.xml,640,3.136,494.912,2.997,501.046,6.134,1.996,537
-4,yolov5n6_openvino_model/yolov5n6.xml,1280,9.47,228.361,5.715,243.546,15.185,4.106,277
-5,yolov5s6_openvino_model/yolov5s6.xml,1280,10.649,498.922,6.622,516.193,17.271,1.937,557
-6,yolov5m6_openvino_model/yolov5m6.xml,1280,10.471,1092.631,6.355,1109.456,16.826,0.901,1163
-7,yolov5l6_openvino_model/yolov5l6.xml,1280,10.19,2151.069,7.259,2168.519,17.45,0.461,2225
