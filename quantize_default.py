@@ -19,6 +19,9 @@ from utils.general import imread
 from yaspin import yaspin
 from export_openvino_models import export_models, MODELS
 
+MODELS = ["yolov5n", "yolov5s", "yolov5m", "yolov5l"]
+MODELS_P6 = ["yolov5n6", "yolov5s6", "yolov5m6", "yolov5l6"]
+
 class DetectionDataLoader(DataLoader):
     # https://docs.openvino.ai/latest/notebooks/111-detection-quantization-with-output.html#run-quantization-pipeline
     def __init__(self, basedir: str, target_size: Tuple[int, int]):
@@ -59,10 +62,10 @@ class DetectionDataLoader(DataLoader):
         return len(self.images)
 
 
-def quantize_models():
-    for model_name in MODELS:
+def quantize_models(model_names):
+    for model_name in model_names:
         imgsize = 1280 if '6' in model_name else 640
-        ir_path = Path(f"{model_name}_openvino_model_fp16/{model_name}.xml")
+        ir_path = Path(f"openvino_models/{model_name}_fp16_{imgsize}/{model_name}_{imgsize}.xml")
 
         # %%
         model_config = {
@@ -106,7 +109,7 @@ def quantize_models():
 
         compressed_model_paths = save_model(
             model=compressed_model,
-            save_path=f"{model_name}_openvino_model_int8",
+            save_path=f"openvino_models/{model_name}_int8_{imgsize}",
             model_name=f"{model_name}",
         )
 
@@ -159,4 +162,5 @@ class ImageLoader(DataLoader):
 
 if __name__ == "__main__":
     #export_models()
-    quantize_models()
+    quantize_models(MODELS)
+    quantize_models(MODELS_P6[:3])

@@ -196,7 +196,7 @@ def run(
         if cuda:
             im = im.to(device, non_blocking=True)
             targets = targets.to(device)
-        #pil_image = torch.squeeze(im).permute(1, 2, 0).cpu().numpy()
+        pil_image = torch.squeeze(im).permute(1, 2, 0).cpu().numpy()
         im = im.half() if half else im.float()  # uint8 to fp16/32
         im /= 255  # 0 - 255 to 0.0 - 1.0
 
@@ -217,7 +217,7 @@ def run(
         lb = [targets[targets[:, 0] == i, 1:] for i in range(nb)] if save_hybrid else []  # for autolabelling
         t3 = time_sync()
         out = non_max_suppression(out, conf_thres, iou_thres, labels=lb, multi_label=True,
-                                  agnostic=single_cls)
+                                  agnostic=single_cls, pil_image=pil_image)
         dt[2] += time_sync() - t3
 
         # Metrics

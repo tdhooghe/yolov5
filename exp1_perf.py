@@ -3,9 +3,9 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 
-MODELS = ["yolov5n", "yolov5s", "yolov5m", "yolov5l",
-          #"yolov5n6", "yolov5s6", "yolov5m6",  # "yolov5l6"
-          ]
+MODELS = ["yolov5n", "yolov5s", "yolov5m", "yolov5l"]
+
+MODELS_P6 = ["yolov5n6", "yolov5s6", "yolov5m6",  "yolov5l6"]
 
 PRECISION = ['int8', 'fp16', 'fp32']
 
@@ -13,7 +13,7 @@ PRECISION = ['int8', 'fp16', 'fp32']
 CLASSES = ['person', 'car', 'motorcycle', 'bus', 'truck', 'baseball bat', 'knife', 'cell phone']
 
 
-def run_exp1_perf():
+def run_exp1_perf(models, precisions):
     # glob_metrics: mp, mr, map50, map
     # t: prep., inference, NMS
     # person: 0, car: 2, motorcycle: 3, bus: 5, truck: 7, baseball bat: 38, knife: 48, cell phone: 76
@@ -26,15 +26,19 @@ def run_exp1_perf():
     exp1_perf = pd.DataFrame(columns=column_names)
 
     counter = 0
-    for model in MODELS:
+    for model in models:
         imgsize = 1280 if "6" in model else 640
-        for precision in PRECISION:
+        for precision in precisions:
+            if precision == 'int8' and model == 'yolov5l6':
+                break
             # for batch_size in BATCH_SIZES:
             start_experiment = datetime.now()
             row = [model, imgsize, precision]
             print(row)
+            weights = f'openvino_models/{model}_{precision}_{imgsize}'
+            print(weights)
             glob_metrics, maps, t, names, ap, ap50, ap_class, p, r, tp, fp = \
-                run(data='data/coco.yaml', weights='openvino/yolov5nfp16_320', imgsz=imgsize, verbose=True)
+                run(data='data/coco.yaml', weights=weights, imgsz=imgsize, verbose=True)
 
             # process mAP results per class
             coco_class_index = {}
@@ -70,11 +74,9 @@ def run_exp1_perf():
             row.append((datetime.now() - start_experiment).seconds)  # duration of experiment
             exp1_perf.loc[counter] = row
             counter += 1
-            break
-        break
     print(exp1_perf)
     # store results
-    filename = f'exp1_results/exp1_perf_{datetime.now().strftime("%d-%m-%Y_%H-%M")}'
+    filename = f'results/experiments/exp1/{datetime.now().strftime("%Y%m%d")}_exp1_perf'
     exp1_perf.round(3)
     print(exp1_perf)
     exp1_perf.to_pickle(filename + '.pkl')
@@ -82,5 +84,8 @@ def run_exp1_perf():
 
 
 if __name__ == "__main__":
-    run_exp1_perf()
+    run_exp1_perf(MODELS, PRECISION)
+    run_exp1_perf(MODELS_P6, PRECISION)
+    #run_exp1_perf(['yolov5l6'], ['int8'])
+
 

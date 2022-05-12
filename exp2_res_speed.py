@@ -56,6 +56,6 @@ def run_exp2_res_speed(models, precisions, image_sizes):
 
 
 if __name__ == "__main__":
-    # run_exp2_res_speed(['yolov5n6'], ['fp16'], [832])
-    run_exp2_res_speed(MODELS_P6, PRECISION, IMAGE_SIZES_P6)
-    # run_exp2_res_speed(MODELS, PRECISION, IMAGE_SIZES)
+    #run_exp2_res_speed(MODELS, PRECISION, IMAGE_SIZES)
+    run_exp2_res_speed(MODELS_P6, ['fp16'], [1280])
+    #run_exp2_res_speed(['yolov5n'], ['fp16'], [320])

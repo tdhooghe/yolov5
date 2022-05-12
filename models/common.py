@@ -353,8 +353,8 @@ class DetectMultiBackend(nn.Module):
             # input_blob_name = next(iter(network.input_info))  # Get names of the input blob
             # print(input_blob_name)
             # test = network.input_info[input_blob_name] #.precision = 'FP16
-            dev = "AUTO" if 'int8' in str(w) else "GPU"
-            executable_network = core.load_network(network, device_name='GPU', num_requests=0)
+            dev = "AUTO" if 'int8' in str(w) else "GPU"#
+            executable_network = core.load_network(network, device_name=dev, num_requests=0)
             print(executable_network.infer)
         elif engine:  # TensorRT
             LOGGER.info(f'Loading {w} for TensorRT inference...')
