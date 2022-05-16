@@ -353,12 +353,12 @@ class DetectMultiBackend(nn.Module):
             if 'stride' in meta:
                 stride, names = int(meta['stride']), eval(meta['names'])
         elif xml:  # OpenVINO
-
             LOGGER.info(f'Loading {w} for OpenVINO inference...')
             check_requirements(('openvino-dev',))  # requires openvino-dev: https://pypi.org/project/openvino-dev/
             import openvino.inference_engine as ie
             from openvino.runtime import Core
 
+            ie = Core()
             if not Path(w).is_file():  # if not *.xml
                 w = next(Path(w).glob('*.xml'))  # get *.xml file from *_openvino_model dir
 
@@ -377,6 +377,9 @@ class DetectMultiBackend(nn.Module):
             dev = "AUTO" if 'int8' in str(w) else "GPU"#
             executable_network = core.load_network(network, device_name=dev, num_requests=0)
             print(executable_network.infer)
+            network = ie.read_model(model=w, weights=Path(w).with_suffix('.bin'))
+            executable_network = ie.compile_model(model=network, device_name="CPU")
+            self.output_layer = next(iter(executable_network.outputs))
         elif engine:  # TensorRT
             LOGGER.info(f'Loading {w} for TensorRT inference...')
             import tensorrt as trt  # https://developer.nvidia.com/nvidia-tensorrt-download
@@ -467,12 +470,14 @@ class DetectMultiBackend(nn.Module):
             # request.infer(inputs={self.input_layer.any_name: im})
             # y = request.get_output_tensor(self.output_layer.index).data
 
-            desc = self.ie.TensorDesc(precision='FP32', dims=im.shape, layout='NCHW')  # Tensor Description,
-            # precision regarding memory precision
-            request = self.executable_network.requests[0]  # inference request
-            request.set_blob(blob_name='images', blob=self.ie.Blob(desc, im))  # name=next(iter(request.input_blobs))
-            request.infer()
+            # desc = self.ie.TensorDesc(precision='FP32', dims=im.shape, layout='NCHW')  # Tensor Description,
+            # # precision regarding memory precision
+            # request = self.executable_network.requests[0]  # inference request
+            # request.set_blob(blob_name='images', blob=self.ie.Blob(desc, im))  # name=next(iter(request.input_blobs))
+            # request.infer()
             y = request.output_blobs['output'].buffer  # name=next(iter(request.output_blobs)); shape (1, 25200, 85)
+            im = im.cpu().numpy()  # FP32
+            y = self.executable_network([im])[self.output_layer]
         elif self.engine:  # TensorRT
             assert im.shape == self.bindings['images'].shape, (im.shape, self.bindings['images'].shape)
             self.binding_addrs['images'] = int(im.data_ptr())
