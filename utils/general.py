@@ -869,6 +869,7 @@ def non_max_suppression(prediction,
         output[xi] = x[i]
         if (time.time() - t) > time_limit:
             LOGGER.warning(f'WARNING: NMS time limit {time_limit:.3f}s exceeded')
+            if not pil_image = None
             Image.fromarray(pil_image, mode='RGB').show() if pil_image.any() else None
             break  # time limit exceeded
 
