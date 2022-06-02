@@ -2,11 +2,17 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
+import os
 
 
 # %%
-def plot_speed_det(df_path):
-    df = pd.read_csv(df_path)
+def plot_speed_det(path):
+    if os.path.splitext(path)[-1] == '.csv':
+        df = pd.read_csv(path)
+    elif os.path.splitext(path)[-1] == '.xls' or '.xlsx':
+        df = pd.read_excel(path, engine='openpyxl')
+    else:
+        return print('Not a valid file')
     g = sns.relplot(
         data=df, x='FPS', y='mAP50', col='device', hue='model', style='precision', kind='scatter'
 
@@ -19,4 +25,6 @@ def plot_speed_det(df_path):
     # g.savefig("results/plots/relplot.png")
     plt.show()
 
+
 # %%
+plot_speed_det("./results/experiments/exp2/220530_results_res-fps.xlsx")
