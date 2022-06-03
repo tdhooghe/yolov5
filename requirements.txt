@@ -19,6 +19,7 @@ wandb~=0.12.11
 # Plotting ------------------------------------
 pandas>=1.1.4
 seaborn>=0.11.0
+openpyxl
 
 # Export --------------------------------------
 # coremltools>=4.1  # CoreML export
