@@ -162,5 +162,5 @@ class ImageLoader(DataLoader):
 
 if __name__ == "__main__":
     #export_models()
-    quantize_models(MODELS)
+    #quantize_models(MODELS)
     quantize_models(MODELS_P6[:3])
