@@ -85,8 +85,9 @@ def run_exp1_perf(models, precisions):
 
 
 if __name__ == "__main__":
-    run_exp1_perf(MODELS, PRECISION)
-    run_exp1_speed()
+    run_exp1_perf(['yolov5l6'], ['fp16', 'fp32'])
+    run_exp1_speed(['yolov5l6'], ['fp16', 'fp32'])
+
 
 
 
