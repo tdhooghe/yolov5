@@ -9,16 +9,16 @@ MODELS = ["yolov5n", "yolov5s", "yolov5m", "yolov5l",
 PRECISION = ['int8', 'fp16', 'fp32']
 
 
-def run_exp1_speed():
+def run_exp1_speed(models, precisions):
     column_names = ["model", "precision", "prep_time", "NMS_time", "latency", "inference_time",
                     "total_time",
                     "FPS", "experiment_time"]
     exp1_speed = pd.DataFrame(columns=column_names)
 
     counter = 0
-    for model in MODELS:
+    for model in models:
         imgsize = 1280 if '6' in model else 640
-        for precision in PRECISION:
+        for precision in precisions:
             if model == 'yolov5l6' and precision == 'int8':
                 break
             start_experiment = datetime.now()
@@ -54,4 +54,4 @@ def run_exp1_speed():
 
 
 if __name__ == "__main__":
-    run_exp1_speed()
+    run_exp1_speed(['yolov5l6'], ['fp16', 'fp32'])
