@@ -368,20 +368,19 @@ class DetectMultiBackend(nn.Module):
             if not Path(w).is_file():  # if not *.xml
                 w = next(Path(w).glob('*.xml'))  # get *.xml file from *_openvino_model dir
 
-            # core = Core()
             # model = core.read_model(model=w, weights=Path(w).with_suffix('.bin'))
             # config = {"PERFORMANCE_HINT": "THROUGHPUT"}
             # compiled_model = core.compile_model(model, config=config, device_name='AUTO')
             # input_layer = next(iter(compiled_model.inputs))
             # output_layer = next(iter(compiled_model.outputs))
 
-            core = ie.IECore()
+            #core = ie.IECore()
             network = core.read_network(model=w, weights=Path(w).with_suffix('.bin'))  # *.xml, *.bin paths
             # input_blob_name = next(iter(network.input_info))  # Get names of the input blob
             # print(input_blob_name)
             # test = network.input_info[input_blob_name] #.precision = 'FP16
             dev = "AUTO" if 'int8' in str(w) else "GPU"#
-            executable_network = core.load_network(network, device_name=dev, num_requests=0)
+            #executable_network = core.load_network(network, device_name=dev, num_requests=0)
             print(executable_network.infer)
             network = ie.read_model(model=w, weights=Path(w).with_suffix('.bin'))
             executable_network = ie.compile_model(model=network, device_name="CPU")
@@ -484,7 +483,7 @@ class DetectMultiBackend(nn.Module):
             # request = self.executable_network.requests[0]  # inference request
             # request.set_blob(blob_name='images', blob=self.ie.Blob(desc, im))  # name=next(iter(request.input_blobs))
             # request.infer()
-            y = request.output_blobs['output'].buffer  # name=next(iter(request.output_blobs)); shape (1, 25200, 85)
+            #y = request.output_blobs['output'].buffer  # name=next(iter(request.output_blobs)); shape (1, 25200, 85)
             im = im.cpu().numpy()  # FP32
             y = self.executable_network([im])[self.output_layer]
         elif self.engine:  # TensorRT
