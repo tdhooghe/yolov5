@@ -1,11 +1,12 @@
 from val import run
 from datetime import datetime
+from exp1_speed import run_exp1_speed
 import numpy as np
 import pandas as pd
 
-MODELS = ["yolov5n", "yolov5s", "yolov5m", "yolov5l"]
 
-MODELS_P6 = ["yolov5n6", "yolov5s6", "yolov5m6",  "yolov5l6"]
+MODELS = ["yolov5n", "yolov5s", "yolov5m", "yolov5l",
+          "yolov5n6", "yolov5s6", "yolov5m6",  "yolov5l6"]
 
 PRECISION = ['int8', 'fp16', 'fp32']
 
@@ -84,8 +85,9 @@ def run_exp1_perf(models, precisions):
 
 
 if __name__ == "__main__":
-    run_exp1_perf(MODELS, PRECISION)
-    run_exp1_perf(MODELS_P6, PRECISION)
-    #run_exp1_perf(['yolov5l6'], ['int8'])
+    run_exp1_perf(['yolov5l6'], ['fp16', 'fp32'])
+    run_exp1_speed(['yolov5l6'], ['fp16', 'fp32'])
+
+
 
 

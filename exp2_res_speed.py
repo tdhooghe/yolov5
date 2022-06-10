@@ -3,15 +3,11 @@ from datetime import datetime
 import pandas as pd
 from pathlib import Path
 
-MODELS = ["yolov5n", "yolov5s", "yolov5m", "yolov5l"]
-
-MODELS_P6 = ["yolov5n6", "yolov5s6", "yolov5m6", "yolov5l6"]
+MODELS = ["yolov5n", "yolov5s", "yolov5m", "yolov5l", "yolov5n6", "yolov5s6", "yolov5m6", "yolov5l6"]
 
 PRECISION = ['fp16']
 
-IMAGE_SIZES = [320, 480, 600, 800, 960]
-
-IMAGE_SIZES_P6 = [256, 448, 640, 832, 1024]
+IMAGE_SIZES = [256, 384, 512, 640, 768, 896, 1024]
 
 
 def run_exp2_res_speed(models, precisions, image_sizes):
@@ -56,6 +52,5 @@ def run_exp2_res_speed(models, precisions, image_sizes):
 
 
 if __name__ == "__main__":
-    #run_exp2_res_speed(MODELS, PRECISION, IMAGE_SIZES)
-    run_exp2_res_speed(MODELS_P6, ['fp16'], [1280])
-    #run_exp2_res_speed(['yolov5n'], ['fp16'], [320])
+    run_exp2_res_speed(MODELS, PRECISION, IMAGE_SIZES)
+
