@@ -120,7 +120,7 @@ def export_onnx(model, im, file, opset, train, dynamic, simplify, prefix=colorst
         f = f.with_suffix('.onnx')
 
         os.mkdir('onnx_models') if not os.path.exists('onnx_models') else None
-        f = f'onnx_models/{f}'
+        f = f'./models/experiment2/{f}'
 
         torch.onnx.export(
             model,

@@ -375,15 +375,15 @@ class DetectMultiBackend(nn.Module):
             # output_layer = next(iter(compiled_model.outputs))
 
             #core = ie.IECore()
-            network = core.read_network(model=w, weights=Path(w).with_suffix('.bin'))  # *.xml, *.bin paths
+            #network = core.read_network(model=w, weights=Path(w).with_suffix('.bin'))  # *.xml, *.bin paths
             # input_blob_name = next(iter(network.input_info))  # Get names of the input blob
             # print(input_blob_name)
             # test = network.input_info[input_blob_name] #.precision = 'FP16
             dev = "AUTO" if 'int8' in str(w) else "GPU"#
             #executable_network = core.load_network(network, device_name=dev, num_requests=0)
-            print(executable_network.infer)
+            #print(executable_network.infer)
             network = ie.read_model(model=w, weights=Path(w).with_suffix('.bin'))
-            executable_network = ie.compile_model(model=network, device_name="CPU")
+            executable_network = ie.compile_model(model=network, device_name="AUTO")
             output_layer = next(iter(executable_network.outputs))
             meta = Path(w).with_suffix('.yaml')
             if meta.exists():
@@ -484,7 +484,7 @@ class DetectMultiBackend(nn.Module):
             # request.set_blob(blob_name='images', blob=self.ie.Blob(desc, im))  # name=next(iter(request.input_blobs))
             # request.infer()
             #y = request.output_blobs['output'].buffer  # name=next(iter(request.output_blobs)); shape (1, 25200, 85)
-            im = im.cpu().numpy()  # FP32
+            #im = im.cpu().numpy()  # FP32
             y = self.executable_network([im])[self.output_layer]
         elif self.engine:  # TensorRT
             assert im.shape == self.bindings['images'].shape, (im.shape, self.bindings['images'].shape)
