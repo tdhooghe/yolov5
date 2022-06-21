@@ -38,26 +38,27 @@ def run_exp1_perf(models, precisions):
             print(row)
             weights = f'openvino_models/{model}_{precision}_{imgsize}'
             print(weights)
-            glob_metrics, maps, t, names, ap, ap50, ap_class, p, r, tp, fp = \
+            extra_metrics = []  # names, ap, ap50, ap_class, p, r, tp, fp
+            glob_metrics, maps, t, extra_metrics = \
                 run(data='data/coco.yaml', weights=weights, imgsz=imgsize, verbose=True)
 
             # process mAP results per class
             coco_class_index = {}
             for class_name in CLASSES:
-                for k, v in names.items():
+                for k, v in extra_metrics[0].items():
                     if class_name == v:
                         coco_class_index[v] = k
 
             class_ap_index = {}
             for (k, v) in coco_class_index.items():
-                class_ap_index[k] = np.where(ap_class == v)[0][0]
+                class_ap_index[k] = np.where(extra_metrics[3] == v)[0][0]
 
             class_ap50 = {}
             class_ap = {}
 
             for (k, v) in class_ap_index.items():
-                class_ap50[k] = ap50[v]
-                class_ap[k] = ap[v]
+                class_ap50[k] = extra_metrics[2][v]
+                class_ap[k] = extra_metrics[1][v]
             row.append(glob_metrics[2])  # mAP50 all classes
             row.append(glob_metrics[3])  # mAP all classes
             row.append(np.mean(list(class_ap50.values())))
