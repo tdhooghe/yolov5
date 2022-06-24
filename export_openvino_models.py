@@ -19,8 +19,9 @@ def export_models(models, precisions, image_sizes):
     for model in models:
         for image_size in image_sizes:
             for precision in precisions:
+                half = True if precision == 'fp16' else False
                 weights = model + '.pt'
-                run(weights=weights, imgsz=(image_size, image_size), ov_precision=precision,
+                run(weights=weights, imgsz=(image_size, image_size), half=half,
                     include=('onnx', 'openvino'))
 
 
@@ -28,5 +29,5 @@ if __name__ == "__main__":
     # export_models(MODELS, PRECISION, IMAGE_SIZES)
     # export_models(MODELS, ['fp16'], IMAGE_SIZES_P6)
     # export_models(MODELS_P6, ['fp32'], [1280])
-    export_models(MODELS, ['fp16'], IMAGE_SIZES_EXTRA)
-    export_models(MODELS_P6, ['fp16'], IMAGE_SIZES_EXTRA)
+    export_models(MODELS, ['fp16'], [960])
+    export_models(MODELS_P6, ['fp16'], [960])

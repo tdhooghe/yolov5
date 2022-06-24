@@ -6,25 +6,22 @@ from pathlib import Path
 MODELS = ["yolov5n", "yolov5s", "yolov5m", "yolov5l",
           "yolov5n6", "yolov5s6", "yolov5m6", "yolov5l6"]
 
-PRECISION = ['int8', 'fp16', 'fp32']
+PRECISION = ["fp16"]
 
-
-def run_exp1_speed(models, precisions):
+def run_exp_960_speed(models, precisions):
     column_names = ["model", "precision", "prep_time", "NMS_time", "latency", "inference_time",
                     "total_time",
                     "FPS", "experiment_time"]
-    exp1_speed = pd.DataFrame(columns=column_names)
+    exp_960_speed = pd.DataFrame(columns=column_names)
 
     counter = 0
     for model in models:
-        imgsize = 1280 if '6' in model else 640
+        imgsize = 960
         for precision in precisions:
-            if model == 'yolov5l6' and precision == 'int8':
-                break
             start_experiment = datetime.now()
             row = [model, precision]
             print(row)
-            model_path = Path(f'./openvino_models/{model}_{precision}_{imgsize}')
+            model_path = Path(f'./openvino_models/{model}_{imgsize}_{precision}')
             print(model_path)
 
             temp = run(
@@ -41,17 +38,17 @@ def run_exp1_speed(models, precisions):
             row.append(1 / (sum(temp)) * 1E3)  # FPS
             row.append((datetime.now() - start_experiment).seconds)  # duration of experiment
             print(row)
-            exp1_speed.loc[counter] = row
+            exp_960_speed.loc[counter] = row
             counter += 1
-    print(exp1_speed)
+    print(exp_960_speed)
     # store results
-    filename = Path(f'results/experiments/exp1_speed/{datetime.now().strftime("%y%m%d")}_speed')
+    filename = Path(f'results/experiments/exp_960_speed/{datetime.now().strftime("%y%m%d-%h-%m")}_speed')
     filename.parent.mkdir(parents=True, exist_ok=True)
-    exp1_speed.round(3)
-    print(exp1_speed)
-    exp1_speed.to_pickle(str(filename) + '.pkl')
-    exp1_speed.to_csv(str(filename) + '.csv')
+    exp_960_speed.round(3)
+    print(exp_960_speed)
+    exp_960_speed.to_pickle(str(filename) + '.pkl')
+    exp_960_speed.to_csv(str(filename) + '.csv')
 
 
 if __name__ == "__main__":
-    run_exp1_speed(['yolov5n', 'yolov5n6', 'yolov5s', 'yolov5s6'], ['fp16'])
+    run_exp_960_speed(MODELS, PRECISION)
