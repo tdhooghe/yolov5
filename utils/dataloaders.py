@@ -29,7 +29,7 @@ from tqdm import tqdm
 from utils.augmentations import Albumentations, augment_hsv, copy_paste, letterbox, mixup, random_perspective
 from utils.general import (DATASETS_DIR, LOGGER, NUM_THREADS, check_dataset, check_requirements, check_yaml, clean_str,
                            cv2, is_colab, is_kaggle, segments2boxes, xyn2xy, xywh2xyxy, xywhn2xyxy, xyxy2xywhn)
-from utils.torch_utils import torch_distributed_zero_first
+from utils.torch_utils import torch_distributed_zero_first, time_sync
 
 # Parameters
 HELP_URL = 'https://github.com/ultralytics/yolov5/wiki/Train-Custom-Data'
@@ -83,7 +83,7 @@ def exif_transpose(image):
             5: Image.TRANSPOSE,
             6: Image.ROTATE_270,
             7: Image.TRANSVERSE,
-            8: Image.ROTATE_90,}.get(orientation)
+            8: Image.ROTATE_90, }.get(orientation)
         if method is not None:
             image = image.transpose(method)
             del exif[0x0112]
@@ -209,10 +209,12 @@ class LoadImages:
         return self
 
     def __next__(self):
+        t1 = time_sync()
         if self.count == self.nf:
             raise StopIteration
         path = self.files[self.count]
 
+        # if multiple photos
         if self.video_flag[self.count]:
             # Read video
             self.mode = 'video'
@@ -243,7 +245,9 @@ class LoadImages:
         img = img.transpose((2, 0, 1))[::-1]  # HWC to CHW, BGR to RGB
         img = np.ascontiguousarray(img)
 
-        return path, img, img0, self.cap, s
+        prep_time = time_sync() - t1
+
+        return path, img, img0, self.cap, s, prep_time
 
     def new_video(self, path):
         self.frame = 0
@@ -333,7 +337,7 @@ class LoadStreams:
             self.fps[i] = max((fps if math.isfinite(fps) else 0) % 100, 0) or 30  # 30 FPS fallback
 
             _, self.imgs[i] = cap.read()  # guarantee first frame
-            self.threads[i] = Thread(target=self.update, args=([i, cap, s]), daemon=True)
+            self.threads[i] = Thread(target=self.update, args=([i, cap, s]), daemon=True)  # keep stream loading
             LOGGER.info(f"{st} Success ({self.frames[i]} frames {w}x{h} at {self.fps[i]:.2f} FPS)")
             self.threads[i].start()
         LOGGER.info('')  # newline
@@ -1078,6 +1082,7 @@ def dataset_stats(path='coco128.yaml', autodownload=False, verbose=False, profil
 
             file = stats_path.with_suffix('.json')
             t1 = time.time()
+
             with open(file, 'w') as f:
                 json.dump(stats, f)  # save stats *.json
             t2 = time.time()

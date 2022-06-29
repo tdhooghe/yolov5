@@ -29,6 +29,7 @@ import os
 import sys
 from pathlib import Path
 
+import pandas as pd
 import torch
 import torch.backends.cudnn as cudnn
 
@@ -110,7 +111,11 @@ def run(
     # Run inference
     model.warmup(imgsz=(1 if pt else bs, 3, *imgsz))  # warmup
     dt, seen = [0.0, 0.0, 0.0], 0
-    for path, im, im0s, vid_cap, s in dataset:
+
+    # create a dataframe that keeps track of total processing time of frames
+    processing_times = []
+    row_count = 0
+    for path, im, im0s, vid_cap, s, prep_time in dataset:
         t1 = time_sync()
         # pil_img = np.moveaxis(im, 0, 2)
         # Image.fromarray(pil_img, mode='RGB').show()
@@ -120,6 +125,8 @@ def run(
         if len(im.shape) == 3:
             im = im[None]  # expand for batch dim
         t2 = time_sync()
+
+        # time to normalize image; resizing is not included in this time
         dt[0] += t2 - t1
 
         # Inference
@@ -131,6 +138,7 @@ def run(
         # NMS
         pred = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic_nms, max_det=max_det)
         dt[2] += time_sync() - t3
+        print(f'{s} time: {time_sync() - t1:.4f} prep_time: {prep_time}')
 
         # Second-stage classifier (optional)
         # pred = utils.general.apply_classifier(pred, classifier_model, im, im0s)
@@ -202,6 +210,8 @@ def run(
 
         # Print time (inference-only)
         LOGGER.info(f'{s}Done. ({t3 - t2:.3f}s)')
+        processing_times.append([s, prep_time, dt[0], dt[1], dt[2]])
+        row_count += 1
 
     # Print results
     t = tuple(x / seen * 1E3 for x in dt)  # speeds per image
@@ -211,7 +221,7 @@ def run(
         LOGGER.info(f"Results saved to {colorstr('bold', save_dir)}{s}")
     if update:
         strip_optimizer(weights)  # update model (to fix SourceChangeWarning)
-    return list(t)
+    return list(t), processing_times
 
 
 def parse_opt():
