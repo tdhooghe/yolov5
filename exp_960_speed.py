@@ -8,7 +8,8 @@ MODELS = ["yolov5n", "yolov5s", "yolov5m", "yolov5l",
 
 PRECISION = ["fp16"]
 
-def run_exp_960_speed(models, precisions):
+
+def run_exp_960_speed(models, precisions, model_type='torch'):
     column_names = ["model", "precision", "prep_time", "NMS_time", "latency", "inference_time",
                     "total_time",
                     "FPS", "experiment_time"]
@@ -21,7 +22,14 @@ def run_exp_960_speed(models, precisions):
             start_experiment = datetime.now()
             row = [model, precision]
             print(row)
-            model_path = Path(f'./openvino_models/{model}_{imgsize}_{precision}')
+            if model_type == 'openvino':
+                model_path = Path(f'./openvino_models/{model}_{imgsize}_{precision}')
+            elif model_type == 'onnx':
+                model_path = Path(f'./onnx_models/{model}_{imgsize}.onnx')
+            elif model_type == 'torch':
+                model_path = f'{model}.pt'
+            else:
+                print('Not a valid model type')
             print(model_path)
 
             temp = run(
@@ -42,7 +50,7 @@ def run_exp_960_speed(models, precisions):
             counter += 1
     print(exp_960_speed)
     # store results
-    filename = Path(f'results/experiments/exp_960_speed/{datetime.now().strftime("%y%m%d-%h-%m")}_speed')
+    filename = Path(f'results/experiments/exp_960_speed/{datetime.now().strftime("%y%m%d-%h-%m")}_{model_type}')
     filename.parent.mkdir(parents=True, exist_ok=True)
     exp_960_speed.round(3)
     print(exp_960_speed)
@@ -51,4 +59,4 @@ def run_exp_960_speed(models, precisions):
 
 
 if __name__ == "__main__":
-    run_exp_960_speed(MODELS, PRECISION)
+    run_exp_960_speed(['yolov5l6'], PRECISION, model_type='torch')
