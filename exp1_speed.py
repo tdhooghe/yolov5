@@ -45,7 +45,7 @@ def run_exp1_speed(models, precisions):
             counter += 1
     print(exp1_speed)
     # store results
-    filename = Path(f'results/experiments/exp1/{datetime.now().strftime("%y%m%d")}_speed')
+    filename = Path(f'results/experiments/exp1_speed/{datetime.now().strftime("%y%m%d")}_speed')
     filename.parent.mkdir(parents=True, exist_ok=True)
     exp1_speed.round(3)
     print(exp1_speed)
@@ -54,4 +54,4 @@ def run_exp1_speed(models, precisions):
 
 
 if __name__ == "__main__":
-    run_exp1_speed(['yolov5l6'], ['fp16', 'fp32'])
+    run_exp1_speed(['yolov5n', 'yolov5n6', 'yolov5s', 'yolov5s6'], ['fp16'])

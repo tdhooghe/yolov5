@@ -29,6 +29,7 @@ import os
 import sys
 from pathlib import Path
 
+import pandas as pd
 import torch
 import torch.backends.cudnn as cudnn
 
@@ -110,7 +111,11 @@ def run(
     # Run inference
     model.warmup(imgsz=(1 if pt else bs, 3, *imgsz))  # warmup
     dt, seen = [0.0, 0.0, 0.0], 0
-    for path, im, im0s, vid_cap, s in dataset:
+
+    # create a list that keeps track of total processing time of frames
+    processing_times = []
+    row_count = 0
+    for path, im, im0s, vid_cap, s, prep_time in dataset:
         t1 = time_sync()
         # pil_img = np.moveaxis(im, 0, 2)
         # Image.fromarray(pil_img, mode='RGB').show()
@@ -120,6 +125,8 @@ def run(
         if len(im.shape) == 3:
             im = im[None]  # expand for batch dim
         t2 = time_sync()
+
+        # time to normalize image; resizing is not included in this time
         dt[0] += t2 - t1
 
         # Inference
@@ -130,7 +137,8 @@ def run(
 
         # NMS
         pred = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic_nms, max_det=max_det)
-        dt[2] += time_sync() - t3
+        t4 = time_sync()
+        dt[2] += t4 - t3
 
         # Second-stage classifier (optional)
         # pred = utils.general.apply_classifier(pred, classifier_model, im, im0s)
@@ -172,7 +180,7 @@ def run(
                         c = int(cls)  # integer class
                         label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
                         annotator.box_label(xyxy, label, color=colors(c, True))
-                    if save_crop:
+                    if save_crop:  # save cropped box
                         save_one_box(xyxy, imc, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
 
             # Stream results
@@ -203,6 +211,13 @@ def run(
         # Print time (inference-only)
         LOGGER.info(f'{s}Done. ({t3 - t2:.3f}s)')
 
+        # Print runtime specifics
+        split = os.path.split(weights)
+        yolo_model = os.path.splitext(split[1])[0]
+        model_extension = os.path.splitext(split[1])[1].replace('.', '')
+        processing_times.append([model_extension, yolo_model, s, prep_time, t2-t1, t3-t2, t4-t3])
+        row_count += 1
+
     # Print results
     t = tuple(x / seen * 1E3 for x in dt)  # speeds per image
     LOGGER.info(f'Speed: %.1fms pre-process, %.1fms inference, %.1fms NMS per image at shape {(1, 3, *imgsz)}' % t)
@@ -211,7 +226,7 @@ def run(
         LOGGER.info(f"Results saved to {colorstr('bold', save_dir)}{s}")
     if update:
         strip_optimizer(weights)  # update model (to fix SourceChangeWarning)
-    return list(t)
+    return list(t), processing_times
 
 
 def parse_opt():

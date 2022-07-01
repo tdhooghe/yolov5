@@ -85,7 +85,7 @@ def export_formats():
         ['TensorFlow GraphDef', 'pb', '.pb', True],
         ['TensorFlow Lite', 'tflite', '.tflite', False],
         ['TensorFlow Edge TPU', 'edgetpu', '_edgetpu.tflite', False],
-        ['TensorFlow.js', 'tfjs', '_web_model', False],]
+        ['TensorFlow.js', 'tfjs', '_web_model', False], ]
     return pd.DataFrame(x, columns=['Format', 'Argument', 'Suffix', 'GPU'])
 
 
@@ -116,11 +116,13 @@ def export_onnx(model, im, file, opset, train, dynamic, simplify, prefix=colorst
         import onnx
 
         LOGGER.info(f'\n{prefix} starting export with onnx {onnx.__version__}...')
+
+        # show resolution in file name
         f = Path(f'{file.stem}_{im.shape[-1]}')
         f = f.with_suffix('.onnx')
 
         os.mkdir('onnx_models') if not os.path.exists('onnx_models') else None
-        f = f'./models/experiment2/{f}'
+        f = f'./onnx_models/{f}'
 
         torch.onnx.export(
             model,
@@ -173,17 +175,23 @@ def export_onnx(model, im, file, opset, train, dynamic, simplify, prefix=colorst
         LOGGER.info(f'{prefix} export failure: {e}')
 
 
-def export_openvino(model, file, half, prefix=colorstr('OpenVINO:')):
+def export_openvino(model, im, file, half, prefix=colorstr('OpenVINO:')):
     # YOLOv5 OpenVINO export
     try:
         check_requirements(('openvino-dev',))  # requires openvino-dev: https://pypi.org/project/openvino-dev/
         import openvino.inference_engine as ie
 
         LOGGER.info(f'\n{prefix} starting export with openvino {ie.__version__}...')
-        f = str(file).replace('.pt', f'_openvino_model{os.sep}')
+        f = f'{file.stem}_{im.shape[-1]}'
+        input_model = 'onnx_models/' + f + '.onnx'
+        f = f'./openvino_models/{f}_{"fp16" if half else "fp32"}'
+        os.mkdir('openvino_models') if not os.path.exists('openvino_models') else None
 
-        cmd = f"mo --input_model {file.with_suffix('.onnx')} --output_dir {f} --data_type {'FP16' if half else 'FP32'}"
+        cmd = f"mo --input_model {input_model} --output_dir {f} --data_type " \
+              f"{'FP16' if half else 'FP32'}"
+        print(half)
         subprocess.check_output(cmd.split())  # export
+
         with open(Path(f) / file.with_suffix('.yaml').name, 'w') as g:
             yaml.dump({'stride': int(max(model.stride)), 'names': model.names}, g)  # add metadata.yaml
 
@@ -440,9 +448,9 @@ def export_tfjs(file, prefix=colorstr('TensorFlow.js:')):
                 r'"Identity.?.?": {"name": "Identity.?.?"}, '
                 r'"Identity.?.?": {"name": "Identity.?.?"}, '
                 r'"Identity.?.?": {"name": "Identity.?.?"}}}', r'{"outputs": {"Identity": {"name": "Identity"}, '
-                r'"Identity_1": {"name": "Identity_1"}, '
-                r'"Identity_2": {"name": "Identity_2"}, '
-                r'"Identity_3": {"name": "Identity_3"}}}', json)
+                                                               r'"Identity_1": {"name": "Identity_1"}, '
+                                                               r'"Identity_2": {"name": "Identity_2"}, '
+                                                               r'"Identity_3": {"name": "Identity_3"}}}', json)
             j.write(subst)
 
         LOGGER.info(f'{prefix} export success, saved as {f} ({file_size(f):.1f} MB)')
@@ -528,7 +536,7 @@ def run(
         print(im.shape[3])
         f[2] = export_onnx(model, im, file, opset, train, dynamic, simplify)
     if xml:  # OpenVINO
-        f[3] = export_openvino(model, file, half)
+        f[3] = export_openvino(model, im, file, half)
     if coreml:
         _, f[4] = export_coreml(model, im, file, int8, half)
 
