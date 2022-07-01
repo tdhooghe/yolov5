@@ -35,10 +35,24 @@ def run_exp_960_speed(models, precisions, model_type='torch'):
 
             temp, processing_times = run(
                 weights=model_path,
-                source="../datasets/coco/images/val2017/000000463199.jpg",  # 000000463199.jpg
+                source="../datasets/coco/images/val2017",  # 000000463199.jpg
                 nosave=True,
                 imgsz=(imgsize, imgsize)
             )
+            # store inference times of all images per model
+            filename = Path(
+                f'results/experiments/exp_960_speed/{datetime.now().strftime("%y%m%d-%H-%M")}_processing_times_'
+                f'{model}_{model_type}')
+            filename.parent.mkdir(parents=True, exist_ok=True)
+
+            df_processing_times = pd.DataFrame(processing_times,
+                                               columns=['path_dets', 'prep_time', 'normalize', 'inference',
+                                                        'nms'])
+            df_processing_times.round(3)
+            # x.to_pickle(str(filename) + '.pkl')
+            df_processing_times.to_csv(str(filename) + '.csv')
+
+            # create row for map_fps data
             row.append(temp[0])  # preprocessing
             row.append(temp[2])  # NMS
             row.append(temp[0] + temp[2])  # latency (prep + NMS)
@@ -46,29 +60,16 @@ def run_exp_960_speed(models, precisions, model_type='torch'):
             row.append(sum(temp))  # total time
             row.append(1 / (sum(temp)) * 1E3)  # FPS
             row.append((datetime.now() - start_experiment).seconds)  # duration of experiment
-            print(row)
             map_fps.loc[counter] = row
             counter += 1
-    print(map_fps)
+
+
     # store mAP results
-    filename = Path(f'results/experiments/exp_960_speed/{datetime.now().strftime("%y%m%d-%H-%M")}_map_{model}_'
-                    f'{model_type}')
+    filename = Path(f'results/experiments/exp_960_speed/{datetime.now().strftime("%y%m%d-%H-%M")}_map_{model_type}')
     filename.parent.mkdir(parents=True, exist_ok=True)
     map_fps.round(3)
     #x.to_pickle(str(filename) + '.pkl')
     map_fps.to_csv(str(filename) + '.csv')
 
-    # store inference times of all images
-    filename = Path(f'results/experiments/exp_960_speed/{datetime.now().strftime("%y%m%d-%H-%M")}_processing_times_'
-                    f'{model}_{model_type}')
-    filename.parent.mkdir(parents=True, exist_ok=True)
-
-    df_processing_times = pd.DataFrame(processing_times, columns=['path_dets', 'prep_time', 'normalize', 'inference',
-                                                                  'nms'])
-    df_processing_times.round(3)
-    #x.to_pickle(str(filename) + '.pkl')
-    df_processing_times.to_csv(str(filename) + '.csv')
-
-
 if __name__ == "__main__":
-    run_exp_960_speed(['yolov5n'], PRECISION, model_type='openvino')
+    run_exp_960_speed(MODELS, PRECISION, model_type='torch')
