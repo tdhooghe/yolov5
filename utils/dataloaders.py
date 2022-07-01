@@ -370,6 +370,7 @@ class LoadStreams:
         return self
 
     def __next__(self):
+        t1 = time_sync()
         self.count += 1
         if not all(x.is_alive() for x in self.threads) or cv2.waitKey(1) == ord('q'):  # q to quit
             cv2.destroyAllWindows()
@@ -385,8 +386,9 @@ class LoadStreams:
         # Convert
         img = img[..., ::-1].transpose((0, 3, 1, 2))  # BGR to RGB, BHWC to BCHW
         img = np.ascontiguousarray(img)
+        prep_time = time_sync() - t1
 
-        return self.sources, img, img0, None, ''
+        return self.sources, img, img0, None, '', prep_time
 
     def __len__(self):
         return len(self.sources)  # 1E12 frames = 32 streams at 30 FPS for 30 years

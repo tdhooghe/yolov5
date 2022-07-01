@@ -180,7 +180,7 @@ def run(
                         c = int(cls)  # integer class
                         label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
                         annotator.box_label(xyxy, label, color=colors(c, True))
-                    if save_crop:
+                    if save_crop:  # save cropped box
                         save_one_box(xyxy, imc, file=save_dir / 'crops' / names[c] / f'{p.stem}.jpg', BGR=True)
 
             # Stream results
@@ -210,7 +210,12 @@ def run(
 
         # Print time (inference-only)
         LOGGER.info(f'{s}Done. ({t3 - t2:.3f}s)')
-        processing_times.append([s, prep_time, t2-t1, t3-t2, t4-t3])
+
+        # Print runtime specifics
+        split = os.path.split(weights)
+        yolo_model = os.path.splitext(split[1])[0]
+        model_extension = os.path.splitext(split[1])[1].replace('.', '')
+        processing_times.append([model_extension, yolo_model, s, prep_time, t2-t1, t3-t2, t4-t3])
         row_count += 1
 
     # Print results
