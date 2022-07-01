@@ -29,7 +29,6 @@ import os
 import sys
 from pathlib import Path
 
-import pandas as pd
 import torch
 import torch.backends.cudnn as cudnn
 
@@ -95,7 +94,6 @@ def run(
     model = DetectMultiBackend(weights, device=device, dnn=dnn, data=data, fp16=half)
     stride, names, pt = model.stride, model.names, model.pt
     imgsz = check_img_size(imgsz, s=stride)  # check image size
-    print(f'check image size {imgsz}')
 
     # Dataloader
     if webcam:
@@ -110,7 +108,7 @@ def run(
 
     # Run inference
     model.warmup(imgsz=(1 if pt else bs, 3, *imgsz))  # warmup
-    dt, seen = [0.0, 0.0, 0.0], 0
+    dt, windows, seen = [0.0, 0.0, 0.0], [], 0
 
     # create a list that keeps track of total processing time of frames
     processing_times = []
@@ -186,6 +184,10 @@ def run(
             # Stream results
             im0 = annotator.result()
             if view_img:
+                if p not in windows:
+                    windows.append(p)
+                    cv2.namedWindow(str(p), cv2.WINDOW_NORMAL | cv2.WINDOW_KEEPRATIO)  # allow window resize (Linux)
+                    cv2.resizeWindow(str(p), im0.shape[1], im0.shape[0])
                 cv2.imshow(str(p), im0)
                 cv2.waitKey(1)  # 1 millisecond
 
