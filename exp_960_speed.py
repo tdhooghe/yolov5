@@ -1,3 +1,5 @@
+import pandas
+
 from detect import run
 from datetime import datetime
 import pandas as pd
@@ -63,13 +65,21 @@ def run_exp_960_speed(models, precisions, model_type='torch'):
             map_fps.loc[counter] = row
             counter += 1
 
-
     # store mAP results
     filename = Path(f'results/experiments/exp_960_speed/{datetime.now().strftime("%y%m%d-%H-%M")}_map_{model_type}')
     filename.parent.mkdir(parents=True, exist_ok=True)
     map_fps.round(3)
-    #x.to_pickle(str(filename) + '.pkl')
+    # x.to_pickle(str(filename) + '.pkl')
     map_fps.to_csv(str(filename) + '.csv')
 
+
+# # %%
+#
+# import pandas as pd
+#
+# file = pd.read_pickle(
+#     "./results/experiments/exp_960_speed/220623-Jun-06_speed.pkl")
+# file.to_csv("./results/experiments/exp_960_speed/220623-Jun-06_speed.csv")
+# #%%
 if __name__ == "__main__":
     run_exp_960_speed(MODELS, PRECISION, model_type='torch')

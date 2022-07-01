@@ -112,7 +112,7 @@ def run(
     model.warmup(imgsz=(1 if pt else bs, 3, *imgsz))  # warmup
     dt, seen = [0.0, 0.0, 0.0], 0
 
-    # create a dataframe that keeps track of total processing time of frames
+    # create a list that keeps track of total processing time of frames
     processing_times = []
     row_count = 0
     for path, im, im0s, vid_cap, s, prep_time in dataset:
@@ -137,7 +137,8 @@ def run(
 
         # NMS
         pred = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic_nms, max_det=max_det)
-        dt[2] += time_sync() - t3
+        t4 = time_sync()
+        dt[2] += t4 - t3
 
         # Second-stage classifier (optional)
         # pred = utils.general.apply_classifier(pred, classifier_model, im, im0s)
@@ -209,7 +210,7 @@ def run(
 
         # Print time (inference-only)
         LOGGER.info(f'{s}Done. ({t3 - t2:.3f}s)')
-        processing_times.append([s, prep_time, dt[0], dt[1], dt[2]])
+        processing_times.append([s, prep_time, t2-t1, t3-t2, t4-t3])
         row_count += 1
 
     # Print results
