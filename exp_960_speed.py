@@ -12,8 +12,9 @@ PRECISION = ["fp16"]
 
 MODEL_TYPES = ["torch", "onnx", "openvino"]
 
+
 def run_exp_960_speed(models, precisions, model_types):
-    column_names = ["model", "precision", "prep_time", "NMS_time", "latency", "inference_time",
+    column_names = ["model_type", "model", "precision", "prep_time", "NMS_time", "latency", "inference_time",
                     "total_time",
                     "FPS", "experiment_time"]
     map_fps = pd.DataFrame(columns=column_names)
@@ -25,7 +26,7 @@ def run_exp_960_speed(models, precisions, model_types):
             imgsize = 960
             for precision in precisions:
                 start_experiment = datetime.now()
-                row = [model, precision]
+                row = [model_type, model, precision]
                 print(row)
                 if model_type == 'openvino':
                     model_path = Path(f'./openvino_models/{model}_{imgsize}_{precision}')
@@ -39,13 +40,12 @@ def run_exp_960_speed(models, precisions, model_types):
 
                 temp, processing_times = run(
                     weights=model_path,
-                    source="../datasets/coco/images/val2017/000000463199.jpg",  # 000000463199.jpg
+                    source="../datasets/coco/images/val2017",  # 000000463199.jpg
                     nosave=True,
                     imgsz=(imgsize, imgsize)
                 )
 
-
-                aggr_processing_times.append(processing_times)
+                aggr_processing_times.append(processing_times[0])
 
                 # create row for map_fps data
                 row.append(temp[0])  # preprocessing
@@ -63,18 +63,20 @@ def run_exp_960_speed(models, precisions, model_types):
         f'results/experiments/exp_960_fps/{datetime.now().strftime("%y%m%d-%H-%M")}_processing_times')
     filename.parent.mkdir(parents=True, exist_ok=True)
     print(aggr_processing_times)
-    df_aggr_processing_times = pd.DataFrame(aggr_processing_times[0],
-                                       columns=['model_ext', 'model', 'path_dets', 'prep_time', 'normalize',
-                                                'inference', 'nms'])
+    df_aggr_processing_times = pd.DataFrame(aggr_processing_times,
+                                            columns=['model_ext', 'model', 'path_dets', 'prep_time', 'normalize',
+                                                     'inference', 'nms'])
     df_aggr_processing_times.round(3)
     df_aggr_processing_times.to_csv(str(filename) + '.csv')
 
     # store mAP results
-    filename = Path(f'results/experiments/exp_960_speed/{datetime.now().strftime("%y%m%d-%H-%M")}_map_{model_type}')
+    filename = Path(f'results/experiments/exp_960_fps/{datetime.now().strftime("%y%m%d-%H-%M")}_exp_time')
     filename.parent.mkdir(parents=True, exist_ok=True)
     map_fps.round(3)
     # x.to_pickle(str(filename) + '.pkl')
     map_fps.to_csv(str(filename) + '.csv')
+
+
 # #%%
 # import os
 #
@@ -94,4 +96,4 @@ def run_exp_960_speed(models, precisions, model_types):
 # file.to_csv("./results/experiments/exp_960_speed/220623-Jun-06_speed.csv")
 # #%%
 if __name__ == "__main__":
-    run_exp_960_speed(['yolov5n'], PRECISION, MODEL_TYPES)
+    run_exp_960_speed(MODELS, ['fp32'], MODEL_TYPES)

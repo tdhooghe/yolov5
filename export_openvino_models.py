@@ -26,6 +26,6 @@ def export_models(models, precisions, image_sizes):
 
 
 if __name__ == "__main__":
-    # export_models(MODELS, ['fp16'], [960])
-    # export_models(MODELS_P6, ['fp16'], [960])
-    export_models(['yolov5n'], ['fp16'], [960])
+    export_models(MODELS, ['fp32'], [960])
+    export_models(MODELS_P6, ['fp32'], [960])
+    #export_models(['yolov5n'], ['fp16'], [960])
