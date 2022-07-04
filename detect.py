@@ -210,15 +210,16 @@ def run(
                         vid_writer[i] = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
                     vid_writer[i].write(im0)
 
-        # Print time (inference-only)
-        LOGGER.info(f'{s}Done. ({t3 - t2:.3f}s)')
-
-        # Print runtime specifics
+        # processing times per image
         split = os.path.split(weights)
         yolo_model = os.path.splitext(split[1])[0]
         model_extension = os.path.splitext(split[1])[1].replace('.', '')
-        processing_times.append([model_extension, yolo_model, s, prep_time, t2-t1, t3-t2, t4-t3])
+        processing_times.append([model_extension, yolo_model, s, prep_time, t2 - t1, t3 - t2, t4 - t3])
         row_count += 1
+
+        # Print time (inference-only)
+        LOGGER.info(f'{s}Done. ({t3 - t2:.3f}s)')
+
 
     # Print results
     t = tuple(x / seen * 1E3 for x in dt)  # speeds per image

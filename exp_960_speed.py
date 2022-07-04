@@ -40,12 +40,11 @@ def run_exp_960_speed(models, precisions, model_types):
 
                 temp, processing_times = run(
                     weights=model_path,
-                    source="../datasets/coco/images/val2017",  # 000000463199.jpg
+                    source="../datasets/coco/images/val2017",  # /datasets/coco128/images/train2017/
                     nosave=True,
                     imgsz=(imgsize, imgsize)
                 )
-
-                aggr_processing_times.append(processing_times[0])
+                aggr_processing_times.extend(processing_times)
 
                 # create row for map_fps data
                 row.append(temp[0])  # preprocessing
@@ -57,12 +56,10 @@ def run_exp_960_speed(models, precisions, model_types):
                 row.append((datetime.now() - start_experiment).seconds)  # duration of experiment
                 map_fps.loc[counter] = row
                 counter += 1
-
     # store inference times of all images per model
     filename = Path(
         f'results/experiments/exp_960_fps/{datetime.now().strftime("%y%m%d-%H-%M")}_processing_times')
     filename.parent.mkdir(parents=True, exist_ok=True)
-    print(aggr_processing_times)
     df_aggr_processing_times = pd.DataFrame(aggr_processing_times,
                                             columns=['model_ext', 'model', 'path_dets', 'prep_time', 'normalize',
                                                      'inference', 'nms'])
@@ -96,4 +93,7 @@ def run_exp_960_speed(models, precisions, model_types):
 # file.to_csv("./results/experiments/exp_960_speed/220623-Jun-06_speed.csv")
 # #%%
 if __name__ == "__main__":
-    run_exp_960_speed(MODELS, ['fp32'], MODEL_TYPES)
+    # run_exp_960_speed(MODELS, ['fp32'], MODEL_TYPES)
+    run_exp_960_speed(['yolov5n', 'yolov5s'], ['fp32'], ['torch'])
+
+#
