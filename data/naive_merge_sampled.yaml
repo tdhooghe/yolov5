@@ -1,0 +1,21 @@
+# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
+# COCO 2017 dataset http://cocodataset.org by Microsoft
+# Example usage: python train.py --data coco.yaml
+# parent
+# ├── yolov5
+# └── datasets
+#     └── coco  ← downloads here
+
+
+# Train/val/test sets as 1) dir: path/to/imgs, 2) file: path/to/imgs.txt, or 3) list: [path/to/imgs1, path/to/imgs2, ..]
+
+path: ../../Datasets/FINAL/naive/yolo/naive_merge_sampled # dataset root dir
+train: train/obj_train_data/  # train images (relative to 'path') 128 images
+val: valid/obj_valid_data/  # val images (relative to 'path') 128 images
+test:  # test images (optional)
+
+# Classes
+nc: 11 # number of classes
+names: ['person', 'car', 'motorcycle', 'bus', 'truck', 'military wheeled vehicle', 'military tracked vehicle',
+        'rifle', 'pistol', 'knife', 'cell phone']
+

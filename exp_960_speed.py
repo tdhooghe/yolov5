@@ -94,6 +94,4 @@ def run_exp_960_speed(models, precisions, model_types):
 # #%%
 if __name__ == "__main__":
     # run_exp_960_speed(MODELS, ['fp32'], MODEL_TYPES)
-    run_exp_960_speed(['yolov5n', 'yolov5s'], ['fp32'], ['torch'])
-
-#
+    run_exp_960_speed(['yolov5n'], ['fp32'], ['torch'])
