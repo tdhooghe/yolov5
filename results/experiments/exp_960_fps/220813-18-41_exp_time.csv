@@ -1,0 +1,2 @@
+,model_type,model,precision,prep_time,NMS_time,latency,inference_time,total_time,FPS,experiment_time
+0,openvino,yolov5s6,fp16,5.914532054554333,3.8326250423084605,9.747157096862793,161.39884580265394,171.14600289951673,5.842964387471674,234
