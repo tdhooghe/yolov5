@@ -25,6 +25,8 @@ def run_exp_960_speed(models, precisions, model_types):
         for model in models:
             imgsize = 960
             for precision in precisions:
+                if precision == 'int8' and model == 'yolov5l6':
+                    break
                 start_experiment = datetime.now()
                 row = [model_type, model, precision]
                 print(row)
@@ -93,7 +95,5 @@ def run_exp_960_speed(models, precisions, model_types):
 # file.to_csv("./results/experiments/exp_960_speed/220623-Jun-06_speed.csv")
 # #%%
 if __name__ == "__main__":
-    # run_exp_960_speed(MODELS, ['fp32'], MODEL_TYPES)
-    run_exp_960_speed(['yolov5n', 'yolov5s'], ['fp32'], ['torch'])
-
-#
+    run_exp_960_speed(MODELS, ['fp32'], MODEL_TYPES)
+    run_exp_960_speed(MODELS, ['fp32', 'fp16', 'int8'], ['openvino'])
