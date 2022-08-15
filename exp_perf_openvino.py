@@ -8,13 +8,13 @@ import pandas as pd
 MODELS = ["yolov5n", "yolov5s", "yolov5m", "yolov5l",
           "yolov5n6", "yolov5s6", "yolov5m6",  "yolov5l6"]
 
-PRECISION = ['int8', 'fp16', 'fp32']
+PRECISIONS = ['int8', 'fp16', 'fp32']
 
 # %%
 CLASSES = ['person', 'car', 'motorcycle', 'bus', 'truck', 'baseball bat', 'knife', 'cell phone']
 
 
-def run_exp1_perf(models, precisions):
+def run_exp_perf_openvino(models, precisions):
     # glob_metrics: mp, mr, map50, map
     # t: prep., inference, NMS
     # person: 0, car: 2, motorcycle: 3, bus: 5, truck: 7, baseball bat: 38, knife: 48, cell phone: 76
@@ -36,7 +36,7 @@ def run_exp1_perf(models, precisions):
             start_experiment = datetime.now()
             row = [model, imgsize, precision]
             print(row)
-            weights = f'openvino_models/{model}_{precision}_{imgsize}'
+            weights = f'openvino_models/{model}_{imgsize}_{precision}'
             print(weights)
             extra_metrics = []  # names, ap, ap50, ap_class, p, r, tp, fp
             glob_metrics, maps, t, extra_metrics = \
@@ -78,16 +78,16 @@ def run_exp1_perf(models, precisions):
             counter += 1
     print(exp1_perf)
     # store results
-    filename = f'results/experiments/exp1/{datetime.now().strftime("%Y%m%d")}_exp1_perf'
+    filename = f'results/experiments/exp_perf_openvino/{datetime.now().strftime("%y%m%d-%H-%M")}_perf'
     exp1_perf.round(3)
     print(exp1_perf)
-    exp1_perf.to_pickle(filename + '.pkl')
+    #exp1_perf.to_pickle(filename + '.pkl')
     exp1_perf.to_csv(filename + '.csv')
 
 
 if __name__ == "__main__":
-    run_exp1_perf(['yolov5l6'], ['fp16', 'fp32'])
-    run_exp1_speed(['yolov5l6'], ['fp16', 'fp32'])
+    run_exp_perf_openvino(['yolov5l6'], ['fp16'])
+    run_exp_perf_openvino(MODELS, PRECISIONS)
 
 
 
