@@ -826,8 +826,8 @@ def non_max_suppression(prediction,
         # If none remain process next image
         if not x.shape[0]:
             continue
-        print(x[:, 5:].shape)
-        print(x[:, 4:5].shape)
+        # print(x[:, 5:].shape)
+        # print(x[:, 4:5].shape)
         # Compute conf
         x[:, 5:] *= x[:, 4:5]  # conf = obj_conf * cls_conf (196,80) * (196,1)
         # Box (center x, center y, width, height) to (x1, y1, x2, y2)

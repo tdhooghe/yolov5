@@ -378,7 +378,7 @@ class DetectMultiBackend(nn.Module):
                 w = next(Path(w).glob('*.xml'))  # get *.xml file from *_openvino_model dir
             network = core.read_network(model=w, weights=Path(w).with_suffix('.bin'))  # *.xml, *.bin paths
             # input_blob_name = next(iter(network.input_info))  # Get names of the input blob, own addition
-            executable_network = core.load_network(network, device_name='GPU', num_requests=0)
+            executable_network = core.load_network(network, device_name='CPU', num_requests=0)
             print(executable_network.infer)
 
             batch_size = network.batch_size

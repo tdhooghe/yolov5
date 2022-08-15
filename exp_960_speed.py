@@ -16,7 +16,7 @@ MODEL_TYPES = ["torch", "onnx", "openvino"]
 def run_exp_960_speed(models, precisions, model_types):
     column_names = ["model_type", "model", "precision", "prep_time", "NMS_time", "latency", "inference_time",
                     "total_time",
-                    "FPS", "experiment_time"]
+                    "FPS", "experiment_time", "detection_time"]
     map_fps = pd.DataFrame(columns=column_names)
 
     counter = 0
@@ -40,13 +40,14 @@ def run_exp_960_speed(models, precisions, model_types):
                     print('Not a valid model type')
                 print(model_path)
 
-                temp, processing_times = run(
+                temp, processing_times,  = run(
                     weights=model_path,
-                    source="../datasets/coco/images/val2017",  # /datasets/coco128/images/train2017/
+                    #source="../datasets/coco/images/val2017",  # /datasets/coco128/images/train2017/
+                    source="../datasets/scenario/4k",
                     nosave=True,
                     imgsz=(imgsize, imgsize)
                 )
-                aggr_processing_times.extend(processing_times)
+                aggr_processing_times.extend(processing_times[0])
 
                 # create row for map_fps data
                 row.append(temp[0])  # preprocessing
@@ -56,6 +57,7 @@ def run_exp_960_speed(models, precisions, model_types):
                 row.append(sum(temp))  # total time
                 row.append(1 / (sum(temp)) * 1E3)  # FPS
                 row.append((datetime.now() - start_experiment).seconds)  # duration of experiment
+                row.append(processing_times[1])
                 map_fps.loc[counter] = row
                 counter += 1
     # store inference times of all images per model
@@ -95,7 +97,6 @@ def run_exp_960_speed(models, precisions, model_types):
 # file.to_csv("./results/experiments/exp_960_speed/220623-Jun-06_speed.csv")
 # #%%
 if __name__ == "__main__":
-    run_exp_960_speed(MODELS, ['fp32'], MODEL_TYPES)
-    run_exp_960_speed(MODELS, ['fp32', 'fp16', 'int8'], ['openvino'])
-
-#
+    # run_exp_960_speed(MODELS, ['fp32'], MODEL_TYPES)
+    run_exp_960_speed(MODELS, ['fp16', 'int8'], ['openvino'])
+    # run_exp_960_speed(MODELS, ['fp32'], ['openvino'])

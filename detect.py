@@ -111,6 +111,7 @@ def run(
     dt, windows, seen = [0.0, 0.0, 0.0], [], 0
 
     # create a list that keeps track of total processing time of frames
+    s_t = time_sync()
     processing_times = []
     row_count = 0
     for path, im, im0s, vid_cap, s, prep_time in dataset:
@@ -219,7 +220,7 @@ def run(
 
         # Print time (inference-only)
         LOGGER.info(f'{s}Done. ({t3 - t2:.3f}s)')
-
+    e_t = time_sync() - s_t
 
     # Print results
     t = tuple(x / seen * 1E3 for x in dt)  # speeds per image
@@ -229,7 +230,7 @@ def run(
         LOGGER.info(f"Results saved to {colorstr('bold', save_dir)}{s}")
     if update:
         strip_optimizer(weights)  # update model (to fix SourceChangeWarning)
-    return list(t), processing_times
+    return list(t), [processing_times, e_t]
 
 
 def parse_opt():
