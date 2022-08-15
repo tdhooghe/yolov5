@@ -10,7 +10,7 @@ MODELS = ["yolov5n", "yolov5s", "yolov5m", "yolov5l",
 
 PRECISION = ["fp16"]
 
-MODEL_TYPES = ["torch", "onnx", "openvino"]
+MODEL_TYPES = ["torch", "onnx", "openvino", "openvino_cpu"]
 
 
 def run_exp_960_speed(models, precisions, model_types):
@@ -27,10 +27,10 @@ def run_exp_960_speed(models, precisions, model_types):
             for precision in precisions:
                 if precision == 'int8' and model == 'yolov5l6':
                     break
+                row = [f'{model_type}', model, precision]
                 start_experiment = datetime.now()
-                row = [model_type, model, precision]
-                print(row)
-                if model_type == 'openvino':
+
+                if model_type == 'openvino' or 'openvino_cpu':
                     model_path = Path(f'./openvino_models/{model}_{imgsize}_{precision}')
                 elif model_type == 'onnx':
                     model_path = Path(f'./onnx_models/{model}_{imgsize}.onnx')
@@ -38,16 +38,25 @@ def run_exp_960_speed(models, precisions, model_types):
                     model_path = f'{model}.pt'
                 else:
                     print('Not a valid model type')
-                print(model_path)
-
-                temp, processing_times,  = run(
-                    weights=model_path,
-                    #source="../datasets/coco/images/val2017",  # /datasets/coco128/images/train2017/
-                    source="../datasets/scenario/4k",
-                    nosave=True,
-                    imgsz=(imgsize, imgsize)
-                )
-                aggr_processing_times.extend(processing_times[0])
+                    break
+                if model_type == 'openvino_cpu':
+                    openvino_device = 'CPU'
+                    print(row)
+                    temp, processing_times = run(
+                        weights=model_path,
+                        source="../datasets/coco/images/val2017/000000000139.jpg",  # /datasets/coco128/images/train2017/
+                        nosave=True,
+                        imgsz=(imgsize, imgsize),
+                        openvino_device=openvino_device
+                    )
+                else:
+                    temp, processing_times = run(
+                        weights=model_path,
+                        source="../datasets/coco/images/val2017/000000000139.jpg",  # /datasets/coco128/images/train2017/
+                        nosave=True,
+                        imgsz=(imgsize, imgsize),
+                    )
+                aggr_processing_times.extend(processing_times)
 
                 # create row for map_fps data
                 row.append(temp[0])  # preprocessing
@@ -97,6 +106,8 @@ def run_exp_960_speed(models, precisions, model_types):
 # file.to_csv("./results/experiments/exp_960_speed/220623-Jun-06_speed.csv")
 # #%%
 if __name__ == "__main__":
+    run_exp_960_speed(['yolov5n'], ['fp16'], ['openvino', 'openvino_cpu'])
     # run_exp_960_speed(MODELS, ['fp32'], MODEL_TYPES)
-    run_exp_960_speed(MODELS, ['fp16', 'int8'], ['openvino'])
-    # run_exp_960_speed(MODELS, ['fp32'], ['openvino'])
+    #run_exp_960_speed(MODELS, ['fp32', 'fp16', 'int8'], ['openvino'])
+
+#

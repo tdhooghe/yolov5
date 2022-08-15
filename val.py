@@ -327,8 +327,8 @@ def run(
     maps = np.zeros(nc) + map
     for i, c in enumerate(ap_class):
         maps[c] = ap[i]
-    return (mp, mr, map50, map, *(loss.cpu() / len(dataloader)).tolist()), maps, t, [names, ap, ap50, ap_class, p, r,
-           tp, fp]
+    return (mp, mr, map50, map, *(loss.cpu() / len(dataloader)).tolist()), maps, t, names, ap, ap50, ap_class, p, r, \
+           tp, fp
     # added names, tp, fp, p, r
 
 
