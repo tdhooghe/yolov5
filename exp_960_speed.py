@@ -56,7 +56,7 @@ def run_exp_960_speed(models, precisions, model_types):
                         nosave=True,
                         imgsz=(imgsize, imgsize),
                     )
-                aggr_processing_times.extend(processing_times)
+                aggr_processing_times.extend(processing_times[0])
 
                 # create row for map_fps data
                 row.append(temp[0])  # preprocessing
